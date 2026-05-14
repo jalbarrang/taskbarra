@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "taskbarra",
+  "project_id": "e9eeb415-84c4-4196-9b46-71f76c214bcd"
+}
