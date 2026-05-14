@@ -3,3 +3,8 @@
 .dolt/
 *.db
 .beads-credential-key
+
+# Swift Package Manager / local builds
+.build/
+.swiftpm/
+.DS_Store
