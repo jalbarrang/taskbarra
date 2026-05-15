@@ -1,4 +1,4 @@
-import ApplicationServices
+@preconcurrency import ApplicationServices
 import Foundation
 
 struct AccessibilityPermission {
@@ -7,7 +7,8 @@ struct AccessibilityPermission {
     }
 
     func promptForTrust() {
-        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+        let promptOption = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        let options = [promptOption: true] as CFDictionary
         AXIsProcessTrustedWithOptions(options)
     }
 }

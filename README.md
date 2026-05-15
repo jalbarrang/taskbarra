@@ -66,6 +66,19 @@ The local app bundle is created at:
 open .build/Taskbarra.app
 ```
 
+For Accessibility testing, install and launch the app from a stable path:
+
+```bash
+./Scripts/install-local-app.sh
+open /Applications/Taskbarra.app
+```
+
+macOS Accessibility/TCC permissions are tied to the app's code-signing identity and launch path. The default local build uses ad-hoc signing (`-`), which is convenient but can require re-approval after rebuilds. For repeated Accessibility testing, sign with a stable local certificate:
+
+```bash
+TASKBARRA_CODESIGN_IDENTITY="Apple Development: Your Name (TEAMID)" ./Scripts/install-local-app.sh
+```
+
 The scaffold shows a dark, always-visible bottom bar on the main display. Window detection, Accessibility onboarding, real work-area reservation, and window actions are tracked as Beads issues.
 
 ## Issues
