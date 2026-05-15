@@ -2,16 +2,18 @@ import AppKit
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var taskbarWindowController: TaskbarWindowController?
+    private var appCoordinator: AppCoordinator?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        let controller = TaskbarWindowController()
-        controller.showWindow(nil)
-        self.taskbarWindowController = controller
+        let coordinator = AppCoordinator()
+        coordinator.start()
+        self.appCoordinator = coordinator
+    }
 
-        NSApp.activate(ignoringOtherApps: false)
+    func applicationWillTerminate(_ notification: Notification) {
+        appCoordinator?.stop()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
