@@ -29,20 +29,23 @@ public struct WindowScanner {
     }
 
     public func scanVisibleWindows() -> [WindowInfo] {
-        let options: CGWindowListOption = [
-            .optionOnScreenOnly,
-            .excludeDesktopElements,
-        ]
+        scan(options: Self.visibleWindowOptions)
+    }
 
-        return scan(options: options)
+    public func scanVisibleWindowsInStackingOrder() -> [WindowInfo] {
+        scanInProviderOrder(options: Self.visibleWindowOptions)
     }
 
     public func scan(options: CGWindowListOption) -> [WindowInfo] {
+        scanInProviderOrder(options: options)
+            .sorted(by: Self.windowSortOrder)
+    }
+
+    public func scanInProviderOrder(options: CGWindowListOption) -> [WindowInfo] {
         provider
             .copyWindowInfo(options: options, relativeToWindow: kCGNullWindowID)
             .compactMap(Self.parseWindowInfo)
             .filter(isRelevantWindow)
-            .sorted(by: Self.windowSortOrder)
     }
 
     public static func parseWindowInfo(_ dictionary: [String: Any]) -> WindowInfo? {
@@ -95,6 +98,11 @@ public struct WindowScanner {
 
         return lhs.id < rhs.id
     }
+
+    private static let visibleWindowOptions: CGWindowListOption = [
+        .optionOnScreenOnly,
+        .excludeDesktopElements,
+    ]
 
     public static let defaultIgnoredOwnerNames: Set<String> = [
         "Dock",

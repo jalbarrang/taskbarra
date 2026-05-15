@@ -14,6 +14,8 @@ final class WindowStore {
 
     private(set) var windows: [WindowInfo] = []
     private(set) var appIconsByWindowID: [WindowInfo.ID: NSImage] = [:]
+    private(set) var activeWindowID: WindowInfo.ID?
+    private(set) var minimizedWindowIDs: Set<WindowInfo.ID> = []
     private(set) var lastRefresh: Date?
 
     init(
@@ -57,8 +59,11 @@ final class WindowStore {
     }
 
     func refresh() {
-        let scannedWindows = scanner.scanVisibleWindows()
+        let windowsInStackingOrder = scanner.scanVisibleWindowsInStackingOrder()
+        let scannedWindows = windowsInStackingOrder.sorted(by: WindowScanner.windowSortOrder)
         windows = scannedWindows
+        activeWindowID = windowsInStackingOrder.first(where: isFrontmostApplicationWindow)?.id
+        minimizedWindowIDs = []
         appIconsByWindowID = Dictionary(
             uniqueKeysWithValues: scannedWindows.compactMap { window in
                 iconProvider.icon(forOwnerPID: window.ownerPID).map { icon in
@@ -68,5 +73,9 @@ final class WindowStore {
         )
         lastRefresh = Date()
         onRefresh?(scannedWindows)
+    }
+
+    private func isFrontmostApplicationWindow(_ window: WindowInfo) -> Bool {
+        NSWorkspace.shared.frontmostApplication?.processIdentifier == window.ownerPID
     }
 }

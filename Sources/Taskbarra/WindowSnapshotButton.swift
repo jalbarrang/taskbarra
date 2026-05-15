@@ -5,6 +5,8 @@ import TaskbarraCore
 struct WindowSnapshotButton: View {
     let window: WindowInfo
     let appIcon: NSImage?
+    let isActive: Bool
+    let isMinimized: Bool
 
     var body: some View {
         HStack(spacing: 7) {
@@ -27,14 +29,32 @@ struct WindowSnapshotButton: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 34)
-        .frame(maxWidth: 240, alignment: .leading)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 7))
+        .frame(minWidth: 120, maxWidth: 240, alignment: .leading)
+        .opacity(isMinimized ? 0.48 : 1)
+        .background(backgroundStyle, in: RoundedRectangle(cornerRadius: 7))
         .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(.white.opacity(0.28))
-                .frame(height: 1)
+            Capsule()
+                .fill(indicatorColor)
+                .frame(height: isActive ? 4 : 1.5)
                 .padding(.horizontal, 8)
+                .animation(.easeInOut(duration: 0.12), value: isActive)
         }
+        .accessibilityLabel(accessibilityLabel)
         .help("\(window.ownerName): \(window.title)")
+    }
+
+    private var backgroundStyle: Color {
+        isActive ? Color.accentColor.opacity(0.22) : Color.white.opacity(0.08)
+    }
+
+    private var indicatorColor: Color {
+        isActive ? Color.accentColor : Color.white.opacity(0.28)
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [window.ownerName, window.displayTitle]
+        if isActive { parts.append("activa") }
+        if isMinimized { parts.append("minimizada") }
+        return parts.joined(separator: ", ")
     }
 }
