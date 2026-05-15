@@ -31,7 +31,7 @@ public struct WindowScanner {
     public func scanVisibleWindows() -> [WindowInfo] {
         let options: CGWindowListOption = [
             .optionOnScreenOnly,
-            .excludeDesktopElements
+            .excludeDesktopElements,
         ]
 
         return scan(options: options)
@@ -102,6 +102,6 @@ public struct WindowScanner {
         "SystemUIServer",
         "Notification Center",
         "Control Center",
-        "Taskbarra"
+        "Taskbarra",
     ]
 }

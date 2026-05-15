@@ -64,7 +64,7 @@ private func testScansRelevantWindowsInStableOrder() {
         makeWindowDictionary(id: 3, ownerPID: 100, ownerName: "Safari", title: "Zeta"),
         makeWindowDictionary(id: 4, ownerPID: 100, ownerName: "Dock", title: "Dock Window"),
         makeWindowDictionary(id: 2, ownerPID: 101, ownerName: "Finder", title: "Downloads"),
-        makeWindowDictionary(id: 1, ownerPID: 102, ownerName: "Finder", title: "Applications")
+        makeWindowDictionary(id: 1, ownerPID: 102, ownerName: "Finder", title: "Applications"),
     ])
     let scanner = WindowScanner(currentProcessID: 999, provider: provider, ignoredOwnerNames: ["Dock"])
 
@@ -114,7 +114,7 @@ private func makeWindowDictionary(
         kCGWindowName as String: title,
         kCGWindowBounds as String: bounds.dictionaryRepresentation,
         kCGWindowLayer as String: NSNumber(value: layer),
-        kCGWindowIsOnscreen as String: NSNumber(value: isOnScreen)
+        kCGWindowIsOnscreen as String: NSNumber(value: isOnScreen),
     ]
 }
 

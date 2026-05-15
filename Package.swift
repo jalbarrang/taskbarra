@@ -9,7 +9,7 @@ let package = Package(
     ],
     products: [
         .executable(name: "Taskbarra", targets: ["Taskbarra"]),
-        .library(name: "TaskbarraCore", targets: ["TaskbarraCore"])
+        .library(name: "TaskbarraCore", targets: ["TaskbarraCore"]),
     ],
     targets: [
         .target(
@@ -25,6 +25,6 @@ let package = Package(
             name: "TaskbarraCoreTests",
             dependencies: ["TaskbarraCore"],
             path: "Tests/TaskbarraCoreTests"
-        )
+        ),
     ]
 )

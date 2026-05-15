@@ -1,0 +1,49 @@
+rules:
+  - id: taskbarra-swift-no-force-try
+    message: Avoid force try (`try!`) in production Swift code. Handle the error explicitly.
+    severity: ERROR
+    languages: [generic]
+    pattern-regex: '\btry!'
+    paths:
+      include:
+        - Sources/**/*.swift
+
+  - id: taskbarra-swift-no-force-cast
+    message: Avoid force casts (`as!`) in production Swift code. Use checked casts and explicit error handling.
+    severity: ERROR
+    languages: [generic]
+    pattern-regex: '\bas!\s*[A-Za-z_]'
+    paths:
+      include:
+        - Sources/**/*.swift
+
+  - id: taskbarra-swift-no-fatal-error-in-sources
+    message: Avoid `fatalError` in production Swift code. Return errors or make invalid states unrepresentable.
+    severity: ERROR
+    languages: [swift]
+    pattern: fatalError(...)
+    paths:
+      include:
+        - Sources/**/*.swift
+
+  - id: taskbarra-swift-no-process-execution
+    message: Avoid spawning shell processes from the app unless the command and arguments are explicitly threat-modeled.
+    severity: WARNING
+    languages: [swift]
+    pattern: Process()
+    paths:
+      include:
+        - Sources/**/*.swift
+
+  - id: taskbarra-swift-no-private-spaces-api
+    message: Avoid private macOS Spaces APIs. They are unstable and can break across macOS versions.
+    severity: ERROR
+    languages: [swift]
+    pattern-either:
+      - pattern: CGSCopySpaces(...)
+      - pattern: CGSManagedDisplayGetCurrentSpace(...)
+      - pattern: CGSGetActiveSpace(...)
+      - pattern: CGSSetWorkspace(...)
+    paths:
+      include:
+        - Sources/**/*.swift

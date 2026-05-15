@@ -17,12 +17,19 @@ This repo intentionally starts without an Xcode project. The current scaffold bu
 ./Scripts/check.sh
 ```
 
-The check script runs the local core test runner, builds the app bundle, and also runs `swift-format` / `swiftlint` when they are installed.
+The check script requires and runs:
 
-Optional quality tools:
+- `swift-format` (from PATH or `xcrun`)
+- `swiftlint`
+- `semgrep` with local rules from `.semgrep/`
+- the local core test runner
+- the app bundle build
+
+Required quality tools:
 
 ```bash
-brew install swift-format swiftlint
+brew install swiftlint semgrep
+# swift-format can come from Xcode via xcrun, or Homebrew if preferred.
 ```
 
 ## Build
