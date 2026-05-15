@@ -30,6 +30,25 @@ final class WindowInteractionController {
         refreshWindows()
     }
 
+    func minimizeOrRestore(window: WindowInfo) {
+        guard let axWindow = resolver.findWindow(matching: window, includeMinimized: true) else { return }
+
+        if resolver.isMinimized(axWindow) {
+            restoreIfNeeded(axWindow)
+            activateApplication(ownerPID: window.ownerPID)
+            raise(axWindow)
+        } else {
+            minimize(axWindow)
+        }
+        refreshWindows()
+    }
+
+    func close(window: WindowInfo) {
+        guard let axWindow = resolver.findWindow(matching: window, includeMinimized: true) else { return }
+        close(axWindow)
+        refreshWindows()
+    }
+
     private func minimize(_ window: AXUIElement) {
         setMinimized(true, for: window)
     }
@@ -50,5 +69,12 @@ final class WindowInteractionController {
 
     private func raise(_ window: AXUIElement) {
         AXUIElementPerformAction(window, kAXRaiseAction as CFString)
+    }
+
+    private func close(_ window: AXUIElement) {
+        var closeButton: CFTypeRef?
+        let error = AXUIElementCopyAttributeValue(window, kAXCloseButtonAttribute as CFString, &closeButton)
+        guard error == .success, let closeButton else { return }
+        AXUIElementPerformAction(unsafeDowncast(closeButton, to: AXUIElement.self), kAXPressAction as CFString)
     }
 }

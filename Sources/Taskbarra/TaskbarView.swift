@@ -37,6 +37,18 @@ struct TaskbarView: View {
                                         isActive: window.id == windowStore.activeWindowID
                                     )
                                 }
+                                .contextMenu {
+                                    Button(
+                                        windowStore.minimizedWindowIDs.contains(window.id) ? "Restaurar" : "Minimizar"
+                                    ) {
+                                        interactionController.minimizeOrRestore(window: window)
+                                    }
+                                    Button("Cerrar ventana") {
+                                        interactionController.close(window: window)
+                                    }
+                                    Divider()
+                                    Text(window.ownerName)
+                                }
                             }
                         }
                         .padding(.vertical, 2)
