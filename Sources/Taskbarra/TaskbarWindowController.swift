@@ -2,31 +2,24 @@ import AppKit
 import SwiftUI
 
 final class TaskbarWindowController: NSWindowController {
-    private let barHeight: CGFloat = 48
+    private let barHeight = TaskbarGeometry.defaultHeight
     private let windowStore: WindowStore
+    private let workAreaReservation: WorkAreaReservation
+    private var placementObserver: TaskbarPlacementObserver
 
     convenience init() {
         let windowStore = WindowStore()
-        let screen = NSScreen.main ?? NSScreen.screens.first
-        let frame = Self.windowFrame(for: screen, height: 48)
+        let workAreaReservation = WorkAreaReservation()
+        let geometry = TaskbarGeometry.forMainScreen()
 
         let panel = NSPanel(
-            contentRect: frame,
+            contentRect: geometry.taskbarFrame,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
 
-        panel.title = "Taskbarra"
-        panel.isReleasedWhenClosed = false
-        panel.level = .floating
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-        panel.hidesOnDeactivate = false
-        panel.isMovable = false
-        panel.backgroundColor = .clear
-        panel.isOpaque = false
-        panel.hasShadow = true
-        panel.appearance = NSAppearance(named: .darkAqua)
+        TaskbarWindowConfigurator().configure(panel)
 
         let rootView = TaskbarView(windowStore: windowStore)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -34,18 +27,31 @@ final class TaskbarWindowController: NSWindowController {
 
         panel.contentView = NSHostingView(rootView: rootView)
 
-        self.init(window: panel, windowStore: windowStore)
+        self.init(
+            window: panel,
+            windowStore: windowStore,
+            workAreaReservation: workAreaReservation
+        )
 
         windowStore.startPolling()
+        placementObserver.start()
+        applyCurrentPlacement()
     }
 
-    init(window: NSWindow?, windowStore: WindowStore) {
+    init(window: NSWindow?, windowStore: WindowStore, workAreaReservation: WorkAreaReservation) {
         self.windowStore = windowStore
+        self.workAreaReservation = workAreaReservation
+        self.placementObserver = TaskbarPlacementObserver {}
         super.init(window: window)
+        self.placementObserver = TaskbarPlacementObserver { [weak self] in
+            self?.applyCurrentPlacement()
+        }
     }
 
     required init?(coder: NSCoder) {
         self.windowStore = WindowStore()
+        self.workAreaReservation = WorkAreaReservation()
+        self.placementObserver = TaskbarPlacementObserver {}
         super.init(coder: coder)
     }
 
@@ -56,21 +62,13 @@ final class TaskbarWindowController: NSWindowController {
     }
 
     func reposition() {
-        guard let window else { return }
-        let screen = NSScreen.main ?? NSScreen.screens.first
-        window.setFrame(Self.windowFrame(for: screen, height: barHeight), display: true)
+        applyCurrentPlacement()
     }
 
-    private static func windowFrame(for screen: NSScreen?, height: CGFloat) -> NSRect {
-        guard let screen else {
-            return NSRect(x: 0, y: 0, width: 800, height: height)
-        }
-
-        return NSRect(
-            x: screen.frame.minX,
-            y: screen.frame.minY,
-            width: screen.frame.width,
-            height: height
-        )
+    private func applyCurrentPlacement() {
+        let geometry = TaskbarGeometry.forMainScreen(barHeight: barHeight)
+        workAreaReservation.apply(geometry: geometry)
+        window?.setFrame(geometry.taskbarFrame, display: true)
+        window?.orderFrontRegardless()
     }
 }
