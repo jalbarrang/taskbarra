@@ -8,10 +8,12 @@ import AppKit
 /// Accessibility-based window management can keep maximized windows out of the bar area.
 @MainActor
 final class WorkAreaReservation {
+    private(set) var screenFrame: NSRect = .zero
     private(set) var reservedTaskbarFrame: NSRect = .zero
     private(set) var usableFrame: NSRect = .zero
 
     func apply(geometry: TaskbarGeometry) {
+        screenFrame = geometry.screenFrame
         reservedTaskbarFrame = geometry.taskbarFrame
         usableFrame = geometry.usableFrameAboveTaskbar
     }

@@ -10,6 +10,7 @@ final class WindowStore {
     private let iconProvider: ApplicationIconProvider
     private var refreshTask: Task<Void, Never>?
     private var eventMonitor: AXWindowEventMonitor?
+    var onRefresh: (([WindowInfo]) -> Void)?
 
     private(set) var windows: [WindowInfo] = []
     private(set) var appIconsByWindowID: [WindowInfo.ID: NSImage] = [:]
@@ -66,5 +67,6 @@ final class WindowStore {
             }
         )
         lastRefresh = Date()
+        onRefresh?(scannedWindows)
     }
 }

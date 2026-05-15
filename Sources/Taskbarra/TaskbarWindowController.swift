@@ -5,6 +5,7 @@ final class TaskbarWindowController: NSWindowController {
     private let barHeight = TaskbarGeometry.defaultHeight
     private let windowStore: WindowStore
     private let workAreaReservation: WorkAreaReservation
+    private let workAreaCoordinator: AXWindowWorkAreaCoordinator
     private var placementObserver: TaskbarPlacementObserver
 
     convenience init() {
@@ -41,8 +42,12 @@ final class TaskbarWindowController: NSWindowController {
     init(window: NSWindow?, windowStore: WindowStore, workAreaReservation: WorkAreaReservation) {
         self.windowStore = windowStore
         self.workAreaReservation = workAreaReservation
+        self.workAreaCoordinator = AXWindowWorkAreaCoordinator(workAreaReservation: workAreaReservation)
         self.placementObserver = TaskbarPlacementObserver {}
         super.init(window: window)
+        windowStore.onRefresh = { [weak self] windows in
+            self?.workAreaCoordinator.reconcile(windows: windows)
+        }
         self.placementObserver = TaskbarPlacementObserver { [weak self] in
             self?.applyCurrentPlacement()
         }
@@ -51,6 +56,7 @@ final class TaskbarWindowController: NSWindowController {
     required init?(coder: NSCoder) {
         self.windowStore = WindowStore()
         self.workAreaReservation = WorkAreaReservation()
+        self.workAreaCoordinator = AXWindowWorkAreaCoordinator(workAreaReservation: workAreaReservation)
         self.placementObserver = TaskbarPlacementObserver {}
         super.init(coder: coder)
     }
@@ -70,5 +76,6 @@ final class TaskbarWindowController: NSWindowController {
         workAreaReservation.apply(geometry: geometry)
         window?.setFrame(geometry.taskbarFrame, display: true)
         window?.orderFrontRegardless()
+        workAreaCoordinator.reconcile(windows: windowStore.windows)
     }
 }

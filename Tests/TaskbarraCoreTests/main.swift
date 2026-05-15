@@ -18,6 +18,11 @@ struct TestRunner {
         try run("filters irrelevant windows", testFiltersIrrelevantWindows)
         try run("scan parses, filters, and sorts windows", testScansRelevantWindowsInStableOrder)
         try run("displayTitle falls back to ownerName when title is empty", testDisplayTitleFallback)
+        try run(
+            "window frame policy selects maximized windows that overlap taskbar",
+            testWindowFramePolicySelectsMaximizedWindows)
+        try run(
+            "window frame policy skips adjusted and manual windows", testWindowFramePolicySkipsAdjustedAndManualWindows)
         print("All TaskbarraCore tests passed")
     }
 }
@@ -76,6 +81,46 @@ private func testScansRelevantWindowsInStableOrder() {
 private func testDisplayTitleFallback() {
     expectEqual(makeWindow(ownerName: "Preview", title: "").displayTitle, "Preview")
     expectEqual(makeWindow(ownerName: "Preview", title: "Document.pdf").displayTitle, "Document.pdf")
+}
+
+private func testWindowFramePolicySelectsMaximizedWindows() {
+    let policy = WindowFramePolicy(tolerance: 4)
+    let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+
+    expect(policy.shouldMoveMaximizedWindow(windowFrame: screen, screenFrame: screen, usableFrame: usable))
+    expect(
+        policy.shouldMoveMaximizedWindow(
+            windowFrame: CGRect(x: 0, y: 1, width: 1440, height: 899),
+            screenFrame: screen,
+            usableFrame: usable
+        ))
+}
+
+private func testWindowFramePolicySkipsAdjustedAndManualWindows() {
+    let policy = WindowFramePolicy(tolerance: 4)
+    let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+    let manual = CGRect(x: 120, y: 80, width: 900, height: 700)
+
+    expect(!policy.shouldMoveMaximizedWindow(windowFrame: usable, screenFrame: screen, usableFrame: usable))
+    expect(!policy.shouldMoveMaximizedWindow(windowFrame: manual, screenFrame: screen, usableFrame: usable))
+    expect(
+        !policy.shouldMoveMaximizedWindow(
+            windowFrame: usable,
+            screenFrame: screen,
+            usableFrame: usable,
+            lastAppliedFrame: usable
+        ))
+
+    let changedUsable = CGRect(x: 0, y: 64, width: 1440, height: 836)
+    expect(
+        policy.shouldMoveMaximizedWindow(
+            windowFrame: usable,
+            screenFrame: screen,
+            usableFrame: changedUsable,
+            lastAppliedFrame: usable
+        ))
 }
 
 private func makeWindow(
