@@ -2,11 +2,17 @@ import CoreGraphics
 import Foundation
 import TaskbarraCore
 
-private struct StubWindowInfoProvider: WindowInfoProviding {
+private final class StubWindowInfoProvider: WindowInfoProviding {
     let windows: [[String: Any]]
+    private(set) var requestedOptions: CGWindowListOption?
+
+    init(windows: [[String: Any]]) {
+        self.windows = windows
+    }
 
     func copyWindowInfo(options: CGWindowListOption, relativeToWindow windowID: CGWindowID) -> [[String: Any]] {
-        windows
+        requestedOptions = options
+        return windows
     }
 }
 
@@ -17,6 +23,7 @@ struct TestRunner {
         try run("returns nil for malformed dictionaries", testRejectsMalformedDictionaries)
         try run("filters irrelevant windows", testFiltersIrrelevantWindows)
         try run("scan parses, filters, and sorts windows", testScansRelevantWindowsInStableOrder)
+        try run("visible scan requests only windows on the active Space", testVisibleScanUsesActiveSpaceOptions)
         try run("displayTitle falls back to ownerName when title is empty", testDisplayTitleFallback)
         try run(
             "window frame policy selects maximized windows that overlap taskbar",
@@ -76,6 +83,15 @@ private func testScansRelevantWindowsInStableOrder() {
     let windows = scanner.scan(options: .optionAll)
 
     expectEqual(windows.map(\.id), [1, 2, 3])
+}
+
+private func testVisibleScanUsesActiveSpaceOptions() {
+    let provider = StubWindowInfoProvider(windows: [makeWindowDictionary()])
+    let scanner = WindowScanner(currentProcessID: 999, provider: provider)
+
+    _ = scanner.scanVisibleWindows()
+
+    expectEqual(provider.requestedOptions, [.optionOnScreenOnly, .excludeDesktopElements])
 }
 
 private func testDisplayTitleFallback() {
