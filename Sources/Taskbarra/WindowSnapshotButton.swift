@@ -7,8 +7,18 @@ struct WindowSnapshotButton: View {
     let appIcon: NSImage?
     let isActive: Bool
     let isMinimized: Bool
+    let action: () -> Void
 
     var body: some View {
+        Button(action: action) {
+            content
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+        .help("\(window.ownerName): \(window.title)")
+    }
+
+    private var content: some View {
         HStack(spacing: 7) {
             if let appIcon {
                 Image(nsImage: appIcon)
@@ -39,8 +49,6 @@ struct WindowSnapshotButton: View {
                 .padding(.horizontal, 8)
                 .animation(.easeInOut(duration: 0.12), value: isActive)
         }
-        .accessibilityLabel(accessibilityLabel)
-        .help("\(window.ownerName): \(window.title)")
     }
 
     private var backgroundStyle: Color {

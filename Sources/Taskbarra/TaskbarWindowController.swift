@@ -22,7 +22,10 @@ final class TaskbarWindowController: NSWindowController {
 
         TaskbarWindowConfigurator().configure(panel)
 
-        let rootView = TaskbarView(windowStore: windowStore)
+        let interactionController = WindowInteractionController(refreshWindows: { [weak windowStore] in
+            windowStore?.refresh()
+        })
+        let rootView = TaskbarView(windowStore: windowStore, interactionController: interactionController)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .preferredColorScheme(.dark)
 

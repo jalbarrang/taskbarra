@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TaskbarView: View {
     let windowStore: WindowStore
+    let interactionController: WindowInteractionController
 
     var body: some View {
         HStack(spacing: 8) {
@@ -30,7 +31,12 @@ struct TaskbarView: View {
                                     appIcon: windowStore.appIconsByWindowID[window.id],
                                     isActive: window.id == windowStore.activeWindowID,
                                     isMinimized: windowStore.minimizedWindowIDs.contains(window.id)
-                                )
+                                ) {
+                                    interactionController.toggle(
+                                        window: window,
+                                        isActive: window.id == windowStore.activeWindowID
+                                    )
+                                }
                             }
                         }
                         .padding(.vertical, 2)
