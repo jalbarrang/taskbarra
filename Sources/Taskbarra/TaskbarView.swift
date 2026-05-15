@@ -6,17 +6,6 @@ struct TaskbarView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text("Taskbarra")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.92))
-                .padding(.horizontal, 14)
-                .frame(height: 36)
-                .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
-
-            Divider()
-                .frame(height: 24)
-                .overlay(.white.opacity(0.18))
-
             Group {
                 if windowStore.windows.isEmpty {
                     Text("Sin ventanas detectadas")
