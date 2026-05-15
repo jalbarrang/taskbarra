@@ -32,6 +32,22 @@ brew install swiftlint semgrep
 # swift-format can come from Xcode via xcrun, or Homebrew if preferred.
 ```
 
+## Local setup
+
+Install the versioned Git hooks before committing:
+
+```bash
+./Scripts/install-git-hooks.sh
+```
+
+This enables a `commit-msg` hook that enforces [Conventional Commits](https://www.conventionalcommits.org/):
+
+```text
+feat(taskbar): render app icons
+fix(ax): refresh windows after Space changes
+docs: document local build flow
+```
+
 ## Build
 
 ```bash
