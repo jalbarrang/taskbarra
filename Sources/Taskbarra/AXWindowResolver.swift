@@ -20,6 +20,9 @@ struct AXWindowResolver {
             ?? axWindows.first { axWindow in
                 matches(window, axWindow: axWindow, includeMinimized: includeMinimized, requireTitle: false)
             }
+            ?? axWindows.only { axWindow in
+                matchesByTitleAndScreenPresence(window, axWindow: axWindow, includeMinimized: includeMinimized)
+            }
             ?? axWindows.first { axWindow in
                 includeMinimized && isMinimized(axWindow) && titleMatches(window, axWindow: axWindow)
             }
@@ -104,8 +107,30 @@ struct AXWindowResolver {
         return framePolicy.isApproximatelyEqual(frame, window.bounds)
     }
 
+    private func matchesByTitleAndScreenPresence(
+        _ window: WindowInfo,
+        axWindow: AXUIElement,
+        includeMinimized: Bool
+    ) -> Bool {
+        guard includeMinimized || !isMinimized(axWindow), let frame = frame(of: axWindow) else { return false }
+        guard titleMatches(window, axWindow: axWindow) else { return false }
+        return framePolicy.isApproximatelyEqual(frame, window.bounds)
+            || frame.intersects(window.bounds.insetBy(dx: -framePolicy.tolerance * 4, dy: -framePolicy.tolerance * 4))
+    }
+
     private func titleMatches(_ window: WindowInfo, axWindow: AXUIElement) -> Bool {
         let title = stringAttribute(kAXTitleAttribute, of: axWindow) ?? ""
         return window.title.isEmpty || title.isEmpty || title == window.title
+    }
+}
+
+private extension Array {
+    func only(where predicate: (Element) -> Bool) -> Element? {
+        var result: Element?
+        for element in self where predicate(element) {
+            guard result == nil else { return nil }
+            result = element
+        }
+        return result
     }
 }

@@ -109,7 +109,7 @@ final class TaskbarraCoreTests: XCTestCase {
     func testWindowFramePolicySelectsMaximizedWindows() {
         let policy = WindowFramePolicy(tolerance: 4)
         let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
-        let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+        let usable = CGRect(x: 0, y: 0, width: 1440, height: 852)
 
         XCTAssertTrue(policy.shouldMoveMaximizedWindow(windowFrame: screen, screenFrame: screen, usableFrame: usable))
         XCTAssertTrue(
@@ -123,17 +123,24 @@ final class TaskbarraCoreTests: XCTestCase {
     func testWindowFramePolicyHandlesRectangleMaximize() {
         let policy = WindowFramePolicy(tolerance: 4)
         let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
-        let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+        let usable = CGRect(x: 0, y: 0, width: 1440, height: 852)
         let rectangleMaximized = CGRect(x: 0, y: 0, width: 1440, height: 875)
+        let rectangleMaximizedBelowMenuBar = CGRect(x: 0, y: 25, width: 1440, height: 875)
 
         XCTAssertTrue(
             policy.shouldMoveMaximizedWindow(windowFrame: rectangleMaximized, screenFrame: screen, usableFrame: usable))
+        XCTAssertTrue(
+            policy.shouldMoveMaximizedWindow(
+                windowFrame: rectangleMaximizedBelowMenuBar,
+                screenFrame: screen,
+                usableFrame: usable
+            ))
     }
 
     func testWindowFramePolicySkipsAdjustedAndManualWindows() {
         let policy = WindowFramePolicy(tolerance: 4)
         let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
-        let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+        let usable = CGRect(x: 0, y: 0, width: 1440, height: 852)
         let manual = CGRect(x: 120, y: 80, width: 900, height: 700)
 
         XCTAssertFalse(policy.shouldMoveMaximizedWindow(windowFrame: usable, screenFrame: screen, usableFrame: usable))
@@ -146,7 +153,7 @@ final class TaskbarraCoreTests: XCTestCase {
                 lastAppliedFrame: usable
             ))
 
-        let changedUsable = CGRect(x: 0, y: 64, width: 1440, height: 836)
+        let changedUsable = CGRect(x: 0, y: 0, width: 1440, height: 836)
         XCTAssertTrue(
             policy.shouldMoveMaximizedWindow(
                 windowFrame: usable,

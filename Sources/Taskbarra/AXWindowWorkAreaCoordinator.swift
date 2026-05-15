@@ -19,14 +19,17 @@ final class AXWindowWorkAreaCoordinator {
 
     func reconcile(windows: [WindowInfo]) {
         let screenFrame = workAreaReservation.screenFrame
-        let usableFrame = workAreaReservation.usableFrame
+        let usableFrame = workAreaReservation.usableFrameInWindowCoordinates
         guard !screenFrame.isEmpty, !usableFrame.isEmpty else { return }
 
         let liveIDs = Set(windows.map(\.id))
         lastAppliedFramesByWindowID = lastAppliedFramesByWindowID.filter { liveIDs.contains($0.key) }
 
         for window in windows {
-            let frame = window.bounds
+            guard let axWindow = resolver.findWindow(matching: window) else { continue }
+            guard !resolver.isTrueFullscreen(axWindow), canSetFrame(axWindow) else { continue }
+
+            let frame = resolver.frame(of: axWindow) ?? window.bounds
             guard
                 policy.shouldMoveMaximizedWindow(
                     windowFrame: frame,
@@ -37,9 +40,6 @@ final class AXWindowWorkAreaCoordinator {
             else {
                 continue
             }
-
-            guard let axWindow = resolver.findWindow(matching: window) else { continue }
-            guard !resolver.isTrueFullscreen(axWindow), canSetFrame(axWindow) else { continue }
 
             if setFrame(usableFrame, for: axWindow) {
                 lastAppliedFramesByWindowID[window.id] = usableFrame
@@ -59,8 +59,9 @@ final class AXWindowWorkAreaCoordinator {
             let sizeValue = AXValueCreate(.cgSize, &size)
         else { return false }
 
+        let initialSizeResult = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
         let positionResult = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
-        let sizeResult = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
-        return positionResult == .success && sizeResult == .success
+        let finalSizeResult = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
+        return initialSizeResult == .success && positionResult == .success && finalSizeResult == .success
     }
 }

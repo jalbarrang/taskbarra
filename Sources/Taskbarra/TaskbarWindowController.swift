@@ -6,6 +6,7 @@ final class TaskbarWindowController: NSWindowController {
     private let windowStore: WindowStore
     private let workAreaReservation: WorkAreaReservation
     private let workAreaCoordinator: AXWindowWorkAreaCoordinator
+    private let rectangleCompatibilityCoordinator: RectangleCompatibilityCoordinator
     private var placementObserver: TaskbarPlacementObserver
 
     convenience init() {
@@ -46,6 +47,7 @@ final class TaskbarWindowController: NSWindowController {
         self.windowStore = windowStore
         self.workAreaReservation = workAreaReservation
         self.workAreaCoordinator = AXWindowWorkAreaCoordinator(workAreaReservation: workAreaReservation)
+        self.rectangleCompatibilityCoordinator = RectangleCompatibilityCoordinator()
         self.placementObserver = TaskbarPlacementObserver {}
         super.init(window: window)
         windowStore.onRefresh = { [weak self] windows in
@@ -60,6 +62,7 @@ final class TaskbarWindowController: NSWindowController {
         self.windowStore = WindowStore()
         self.workAreaReservation = WorkAreaReservation()
         self.workAreaCoordinator = AXWindowWorkAreaCoordinator(workAreaReservation: workAreaReservation)
+        self.rectangleCompatibilityCoordinator = RectangleCompatibilityCoordinator()
         self.placementObserver = TaskbarPlacementObserver {}
         super.init(coder: coder)
     }
@@ -77,6 +80,7 @@ final class TaskbarWindowController: NSWindowController {
     private func applyCurrentPlacement() {
         let geometry = TaskbarGeometry.forMainScreen(barHeight: barHeight)
         workAreaReservation.apply(geometry: geometry)
+        rectangleCompatibilityCoordinator.reserveTaskbarSpaceIfRectangleIsPresent(taskbarHeight: geometry.barHeight)
         window?.setFrame(geometry.taskbarFrame, display: true)
         window?.orderFrontRegardless()
         workAreaCoordinator.reconcile(windows: windowStore.windows)

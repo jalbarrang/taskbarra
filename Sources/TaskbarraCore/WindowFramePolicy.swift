@@ -37,7 +37,7 @@ public struct WindowFramePolicy: Sendable {
         let touchesTopAndBottom =
             approximatelyEqual(windowFrame.minY, screenFrame.minY)
             && approximatelyEqual(windowFrame.maxY, screenFrame.maxY)
-        let overlapsReservedTaskbar = windowFrame.minY < usableFrame.minY - tolerance
+        let overlapsReservedTaskbar = windowFrame.maxY > usableFrame.maxY + tolerance
         let fillsUsableHeight = windowFrame.height >= usableFrame.height - tolerance
         let reachesVerticalBounds = touchesTopAndBottom || fillsUsableHeight
         let isFullWidthMaximized = spansScreenWidth && overlapsReservedTaskbar && reachesVerticalBounds
