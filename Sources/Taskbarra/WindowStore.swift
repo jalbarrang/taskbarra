@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 import TaskbarraCore
@@ -6,13 +7,19 @@ import TaskbarraCore
 @MainActor
 final class WindowStore {
     private let scanner: WindowScanner
+    private let iconProvider: ApplicationIconProvider
     private var refreshTask: Task<Void, Never>?
 
     private(set) var windows: [WindowInfo] = []
+    private(set) var appIconsByWindowID: [WindowInfo.ID: NSImage] = [:]
     private(set) var lastRefresh: Date?
 
-    init(scanner: WindowScanner = WindowScanner()) {
+    init(
+        scanner: WindowScanner = WindowScanner(),
+        iconProvider: ApplicationIconProvider = ApplicationIconProvider()
+    ) {
         self.scanner = scanner
+        self.iconProvider = iconProvider
     }
 
     func startPolling(interval: Duration = .seconds(2)) {
@@ -35,7 +42,15 @@ final class WindowStore {
     }
 
     func refresh() {
-        windows = scanner.scanVisibleWindows()
+        let scannedWindows = scanner.scanVisibleWindows()
+        windows = scannedWindows
+        appIconsByWindowID = Dictionary(
+            uniqueKeysWithValues: scannedWindows.compactMap { window in
+                iconProvider.icon(forOwnerPID: window.ownerPID).map { icon in
+                    (window.id, icon)
+                }
+            }
+        )
         lastRefresh = Date()
     }
 }

@@ -24,7 +24,10 @@ struct TaskbarView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
                         ForEach(windowStore.windows) { window in
-                            WindowSnapshotButton(window: window)
+                            WindowSnapshotButton(
+                                window: window,
+                                appIcon: windowStore.appIconsByWindowID[window.id]
+                            )
                         }
                     }
                 }
