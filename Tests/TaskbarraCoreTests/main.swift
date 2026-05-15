@@ -24,7 +24,9 @@ struct TestRunner {
         try run("filters irrelevant windows", testFiltersIrrelevantWindows)
         try run("scan parses, filters, and sorts windows", testScansRelevantWindowsInStableOrder)
         try run("visible scan requests only windows on the active Space", testVisibleScanUsesActiveSpaceOptions)
+        try run("scan keeps untitled windows for Accessibility-only setups", testScansUntitledWindows)
         try run("displayTitle falls back to ownerName when title is empty", testDisplayTitleFallback)
+        try run("window info can replace titles without changing identity", testWindowInfoReplacingTitle)
         try run(
             "window frame policy selects maximized windows that overlap taskbar",
             testWindowFramePolicySelectsMaximizedWindows)
@@ -66,7 +68,7 @@ private func testFiltersIrrelevantWindows() {
     expect(scanner.isRelevantWindow(makeWindow()))
     expect(!scanner.isRelevantWindow(makeWindow(ownerPID: 999)))
     expect(!scanner.isRelevantWindow(makeWindow(ownerName: "Dock")))
-    expect(!scanner.isRelevantWindow(makeWindow(title: "   ")))
+    expect(scanner.isRelevantWindow(makeWindow(title: "   ")))
     expect(!scanner.isRelevantWindow(makeWindow(layer: 1)))
     expect(!scanner.isRelevantWindow(makeWindow(isOnScreen: false)))
     expect(!scanner.isRelevantWindow(makeWindow(bounds: CGRect(x: 0, y: 0, width: 79, height: 600))))
@@ -96,9 +98,32 @@ private func testVisibleScanUsesActiveSpaceOptions() {
     expectEqual(provider.requestedOptions, [.optionOnScreenOnly, .excludeDesktopElements])
 }
 
+private func testScansUntitledWindows() {
+    let provider = StubWindowInfoProvider(windows: [
+        makeWindowDictionary(id: 1, ownerPID: 100, ownerName: "Safari", title: "")
+    ])
+    let scanner = WindowScanner(currentProcessID: 999, provider: provider)
+
+    let windows = scanner.scan(options: .optionAll)
+
+    expectEqual(windows.map(\.displayTitle), ["Safari"])
+}
+
 private func testDisplayTitleFallback() {
     expectEqual(makeWindow(ownerName: "Preview", title: "").displayTitle, "Preview")
     expectEqual(makeWindow(ownerName: "Preview", title: "Document.pdf").displayTitle, "Document.pdf")
+}
+
+private func testWindowInfoReplacingTitle() {
+    let original = makeWindow(id: 12, ownerName: "Safari", title: "")
+    let updated = original.replacingTitle("Example Page")
+
+    expectEqual(updated.id, original.id)
+    expectEqual(updated.ownerPID, original.ownerPID)
+    expectEqual(updated.ownerName, original.ownerName)
+    expectEqual(updated.bounds, original.bounds)
+    expectEqual(updated.title, "Example Page")
+    expectEqual(updated.displayTitle, "Example Page")
 }
 
 private func testWindowFramePolicySelectsMaximizedWindows() {

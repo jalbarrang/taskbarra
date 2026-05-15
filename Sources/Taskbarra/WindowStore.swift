@@ -8,6 +8,7 @@ import TaskbarraCore
 final class WindowStore {
     private let scanner: WindowScanner
     private let iconProvider: ApplicationIconProvider
+    private let titleResolver: WindowTitleResolver
     private var refreshTask: Task<Void, Never>?
     private var eventMonitor: AXWindowEventMonitor?
     var onRefresh: (([WindowInfo]) -> Void)?
@@ -20,10 +21,12 @@ final class WindowStore {
 
     init(
         scanner: WindowScanner = WindowScanner(),
-        iconProvider: ApplicationIconProvider = ApplicationIconProvider()
+        iconProvider: ApplicationIconProvider = ApplicationIconProvider(),
+        titleResolver: WindowTitleResolver = WindowTitleResolver()
     ) {
         self.scanner = scanner
         self.iconProvider = iconProvider
+        self.titleResolver = titleResolver
     }
 
     func startMonitoring() {
@@ -59,7 +62,7 @@ final class WindowStore {
     }
 
     func refresh() {
-        let windowsInStackingOrder = scanner.scanVisibleWindowsInStackingOrder()
+        let windowsInStackingOrder = scanner.scanVisibleWindowsInStackingOrder().map(enrichTitle)
         let scannedWindows = windowsInStackingOrder.sorted(by: WindowScanner.windowSortOrder)
         windows = scannedWindows
         activeWindowID = windowsInStackingOrder.first(where: isFrontmostApplicationWindow)?.id
@@ -73,6 +76,12 @@ final class WindowStore {
         )
         lastRefresh = Date()
         onRefresh?(scannedWindows)
+    }
+
+    private func enrichTitle(_ window: WindowInfo) -> WindowInfo {
+        let title = titleResolver.bestEffortTitle(for: window)
+        guard title != window.title else { return window }
+        return window.replacingTitle(title)
     }
 
     private func isFrontmostApplicationWindow(_ window: WindowInfo) -> Bool {

@@ -78,7 +78,6 @@ public struct WindowScanner {
         guard window.ownerPID != currentProcessID else { return false }
         guard window.isOnScreen else { return false }
         guard window.layer == 0 else { return false }
-        guard !window.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         guard window.bounds.width >= 80, window.bounds.height >= 40 else { return false }
         guard !ignoredOwnerNames.contains(window.ownerName) else { return false }
 

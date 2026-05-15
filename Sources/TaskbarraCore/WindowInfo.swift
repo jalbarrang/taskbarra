@@ -31,4 +31,16 @@ public struct WindowInfo: Identifiable, Equatable, Sendable {
     public var displayTitle: String {
         title.isEmpty ? ownerName : title
     }
+
+    public func replacingTitle(_ title: String) -> WindowInfo {
+        WindowInfo(
+            id: id,
+            ownerPID: ownerPID,
+            ownerName: ownerName,
+            title: title,
+            bounds: bounds,
+            layer: layer,
+            isOnScreen: isOnScreen
+        )
+    }
 }
