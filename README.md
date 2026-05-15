@@ -11,6 +11,20 @@ See [`CONTEXT.md`](./CONTEXT.md) for product and architecture decisions.
 
 This repo intentionally starts without an Xcode project. The current scaffold builds with Swift Package Manager and packages a local `.app` bundle via script.
 
+## Quality checks
+
+```bash
+./Scripts/check.sh
+```
+
+The check script runs the local core test runner, builds the app bundle, and also runs `swift-format` / `swiftlint` when they are installed.
+
+Optional quality tools:
+
+```bash
+brew install swift-format swiftlint
+```
+
 ## Build
 
 ```bash

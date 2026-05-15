@@ -1,4 +1,5 @@
 import SwiftUI
+import TaskbarraCore
 
 struct WindowSnapshotButton: View {
     let window: WindowInfo
