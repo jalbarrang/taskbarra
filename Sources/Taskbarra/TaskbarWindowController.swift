@@ -33,7 +33,7 @@ final class TaskbarWindowController: NSWindowController {
             workAreaReservation: workAreaReservation
         )
 
-        windowStore.startPolling()
+        windowStore.startMonitoring()
         placementObserver.start()
         applyCurrentPlacement()
     }

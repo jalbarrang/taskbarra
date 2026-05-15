@@ -9,6 +9,7 @@ final class WindowStore {
     private let scanner: WindowScanner
     private let iconProvider: ApplicationIconProvider
     private var refreshTask: Task<Void, Never>?
+    private var eventMonitor: AXWindowEventMonitor?
 
     private(set) var windows: [WindowInfo] = []
     private(set) var appIconsByWindowID: [WindowInfo.ID: NSImage] = [:]
@@ -22,9 +23,27 @@ final class WindowStore {
         self.iconProvider = iconProvider
     }
 
-    func startPolling(interval: Duration = .seconds(2)) {
+    func startMonitoring() {
         refresh()
 
+        eventMonitor?.stop()
+        let monitor = AXWindowEventMonitor { [weak self] in
+            self?.refresh()
+        }
+        eventMonitor = monitor
+        monitor.start()
+
+        startFallbackPolling()
+    }
+
+    func stopMonitoring() {
+        eventMonitor?.stop()
+        eventMonitor = nil
+        refreshTask?.cancel()
+        refreshTask = nil
+    }
+
+    private func startFallbackPolling(interval: Duration = .seconds(10)) {
         refreshTask?.cancel()
         refreshTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -34,11 +53,6 @@ final class WindowStore {
                 }
             }
         }
-    }
-
-    func stopPolling() {
-        refreshTask?.cancel()
-        refreshTask = nil
     }
 
     func refresh() {
