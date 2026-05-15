@@ -3,8 +3,10 @@ import SwiftUI
 
 final class TaskbarWindowController: NSWindowController {
     private let barHeight: CGFloat = 48
+    private let windowStore: WindowStore
 
     convenience init() {
+        let windowStore = WindowStore()
         let screen = NSScreen.main ?? NSScreen.screens.first
         let frame = Self.windowFrame(for: screen, height: 48)
 
@@ -26,13 +28,25 @@ final class TaskbarWindowController: NSWindowController {
         panel.hasShadow = true
         panel.appearance = NSAppearance(named: .darkAqua)
 
-        let rootView = TaskbarView()
+        let rootView = TaskbarView(windowStore: windowStore)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .preferredColorScheme(.dark)
 
         panel.contentView = NSHostingView(rootView: rootView)
 
-        self.init(window: panel)
+        self.init(window: panel, windowStore: windowStore)
+
+        windowStore.startPolling()
+    }
+
+    init(window: NSWindow?, windowStore: WindowStore) {
+        self.windowStore = windowStore
+        super.init(window: window)
+    }
+
+    required init?(coder: NSCoder) {
+        self.windowStore = WindowStore()
+        super.init(coder: coder)
     }
 
     override func showWindow(_ sender: Any?) {

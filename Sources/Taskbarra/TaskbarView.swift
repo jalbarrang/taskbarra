@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct TaskbarView: View {
+    let windowStore: WindowStore
+
     var body: some View {
         HStack(spacing: 8) {
             Text("Taskbarra")
@@ -14,9 +16,19 @@ struct TaskbarView: View {
                 .frame(height: 24)
                 .overlay(.white.opacity(0.18))
 
-            Text("Scaffold listo — ventanas aparecerán aquí")
-                .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.68))
+            if windowStore.windows.isEmpty {
+                Text("Sin ventanas detectadas")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.white.opacity(0.68))
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(windowStore.windows) { window in
+                            WindowSnapshotButton(window: window)
+                        }
+                    }
+                }
+            }
 
             Spacer(minLength: 0)
         }

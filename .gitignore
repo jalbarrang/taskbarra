@@ -8,3 +8,6 @@
 .build/
 .swiftpm/
 .DS_Store
+
+# Editor-local config
+.vscode/
