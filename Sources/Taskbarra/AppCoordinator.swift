@@ -6,6 +6,7 @@ final class AppCoordinator {
     private let permission: AccessibilityPermission
     private var taskbarWindowController: TaskbarWindowController?
     private var onboardingWindowController: AccessibilityOnboardingWindowController?
+    private var statusItemController: StatusItemController?
     private var permissionMonitorTask: Task<Void, Never>?
     private var hasAccessibilityPermission = false
 
@@ -14,6 +15,7 @@ final class AppCoordinator {
     }
 
     func start() {
+        statusItemController = StatusItemController()
         hasAccessibilityPermission = permission.isTrusted()
         applyCurrentPermissionState()
         startMonitoringPermission()
@@ -22,6 +24,8 @@ final class AppCoordinator {
     func stop() {
         permissionMonitorTask?.cancel()
         permissionMonitorTask = nil
+        statusItemController?.stop()
+        statusItemController = nil
     }
 
     private func startMonitoringPermission() {
