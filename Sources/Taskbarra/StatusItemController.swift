@@ -31,14 +31,14 @@ final class StatusItemController {
     }
 
     private func configureMenu() {
-        let aboutItem = NSMenuItem(title: "About Taskbarra", action: #selector(showAbout), keyEquivalent: "")
+        let aboutItem = NSMenuItem(title: L10n.text("status.about"), action: #selector(showAbout), keyEquivalent: "")
         aboutItem.target = self
 
-        launchAtLoginMenuItem.title = "Launch at Login"
+        launchAtLoginMenuItem.title = L10n.text("status.launch_at_login")
         launchAtLoginMenuItem.action = #selector(toggleLaunchAtLogin)
         launchAtLoginMenuItem.target = self
 
-        let quitItem = NSMenuItem(title: "Quit Taskbarra", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: L10n.text("status.quit"), action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
 
         menu.addItem(aboutItem)
@@ -73,10 +73,10 @@ final class StatusItemController {
 
     private func presentLaunchAtLoginError(_ error: Error) {
         let alert = NSAlert()
-        alert.messageText = "Could Not Update Launch at Login"
+        alert.messageText = L10n.text("status.launch_at_login_error.title")
         alert.informativeText = error.localizedDescription
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: L10n.text("common.ok"))
         alert.runModal()
     }
 }

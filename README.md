@@ -81,6 +81,16 @@ TASKBARRA_CODESIGN_IDENTITY="Apple Development: Your Name (TEAMID)" ./Scripts/in
 
 The scaffold shows a dark, always-visible bottom bar on the main display. Window detection, Accessibility onboarding, real work-area reservation, and window actions are tracked as Beads issues.
 
+## Localization
+
+Taskbarra uses English as the default UI language. User-facing app strings live in:
+
+```text
+Sources/Taskbarra/Resources/en.lproj/Localizable.strings
+```
+
+Use `L10n.text("string.key")` from `Sources/Taskbarra/Localization.swift` for visible app text instead of hardcoded literals. To add a translation, create another locale folder next to `en.lproj` (for example `es.lproj`) with a `Localizable.strings` file containing the same keys translated for that language.
+
 ## Issues
 
 ```bash

@@ -7,32 +7,29 @@ struct AccessibilityOnboardingView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Permiso de Accessibility requerido")
+                Text(L10n.text("accessibility.onboarding.title"))
                     .font(.system(size: 22, weight: .semibold))
 
-                Text(
-                    "Taskbarra necesita este permiso para detectar, activar, minimizar y "
-                        + "acomodar ventanas. Sin él no puede reemplazar correctamente el Dock."
-                )
-                .font(.system(size: 14))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                Text(L10n.text("accessibility.onboarding.body"))
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Label("Abre Privacy & Security > Accessibility", systemImage: "1.circle")
-                Label("Activa Taskbarra en la lista", systemImage: "2.circle")
-                Label("Vuelve aquí; la app continuará automáticamente", systemImage: "3.circle")
+                Label(L10n.text("accessibility.onboarding.step.open"), systemImage: "1.circle")
+                Label(L10n.text("accessibility.onboarding.step.enable"), systemImage: "2.circle")
+                Label(L10n.text("accessibility.onboarding.step.return"), systemImage: "3.circle")
             }
             .font(.system(size: 13))
 
             HStack(spacing: 10) {
-                Button("Abrir System Settings") {
+                Button(L10n.text("accessibility.onboarding.open_settings")) {
                     openSystemSettings()
                 }
                 .keyboardShortcut(.defaultAction)
 
-                Button("Salir") {
+                Button(L10n.text("accessibility.onboarding.quit")) {
                     quit()
                 }
 
@@ -40,7 +37,7 @@ struct AccessibilityOnboardingView: View {
 
                 ProgressView()
                     .controlSize(.small)
-                Text("Esperando permiso…")
+                Text(L10n.text("accessibility.onboarding.waiting"))
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }

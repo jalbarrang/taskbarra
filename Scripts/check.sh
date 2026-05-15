@@ -40,8 +40,8 @@ swiftlint lint --strict
 echo "==> semgrep"
 semgrep scan --config .semgrep --error --quiet
 
-echo "==> core tests"
-swift run TaskbarraCoreTests
+echo "==> swift test"
+swift test
 
 echo "==> build app bundle"
 ./Scripts/build-app.sh

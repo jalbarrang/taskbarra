@@ -61,8 +61,8 @@ struct WindowSnapshotButton: View {
 
     private var accessibilityLabel: String {
         var parts = [window.ownerName, window.displayTitle]
-        if isActive { parts.append("activa") }
-        if isMinimized { parts.append("minimizada") }
+        if isActive { parts.append(L10n.text("window.state.active")) }
+        if isMinimized { parts.append(L10n.text("window.state.minimized")) }
         return parts.joined(separator: ", ")
     }
 }

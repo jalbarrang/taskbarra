@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import TaskbarraCore
+import XCTest
 
 private final class StubWindowInfoProvider: WindowInfoProviding {
     let windows: [[String: Any]]
@@ -16,163 +17,144 @@ private final class StubWindowInfoProvider: WindowInfoProviding {
     }
 }
 
-@main
-struct TestRunner {
-    static func main() throws {
-        try run("parses CGWindow dictionaries into WindowInfo", testParsesWindowInfo)
-        try run("returns nil for malformed dictionaries", testRejectsMalformedDictionaries)
-        try run("filters irrelevant windows", testFiltersIrrelevantWindows)
-        try run("scan parses, filters, and sorts windows", testScansRelevantWindowsInStableOrder)
-        try run("visible scan requests only windows on the active Space", testVisibleScanUsesActiveSpaceOptions)
-        try run("scan keeps untitled windows for Accessibility-only setups", testScansUntitledWindows)
-        try run("displayTitle falls back to ownerName when title is empty", testDisplayTitleFallback)
-        try run("window info can replace titles without changing identity", testWindowInfoReplacingTitle)
-        try run(
-            "window frame policy selects maximized windows that overlap taskbar",
-            testWindowFramePolicySelectsMaximizedWindows)
-        try run(
-            "window frame policy handles Rectangle maximized windows", testWindowFramePolicyHandlesRectangleMaximize)
-        try run(
-            "window frame policy skips adjusted and manual windows", testWindowFramePolicySkipsAdjustedAndManualWindows)
-        print("All TaskbarraCore tests passed")
+final class TaskbarraCoreTests: XCTestCase {
+    func testParsesWindowInfo() throws {
+        let dictionary = makeWindowDictionary(
+            id: 42,
+            ownerPID: 100,
+            ownerName: "Safari",
+            title: "Example Page",
+            bounds: CGRect(x: 10, y: 20, width: 800, height: 600)
+        )
+
+        let window = try XCTUnwrap(WindowScanner.parseWindowInfo(dictionary))
+
+        XCTAssertEqual(window.id, 42)
+        XCTAssertEqual(window.ownerPID, 100)
+        XCTAssertEqual(window.ownerName, "Safari")
+        XCTAssertEqual(window.title, "Example Page")
+        XCTAssertEqual(window.bounds, CGRect(x: 10, y: 20, width: 800, height: 600))
+        XCTAssertEqual(window.layer, 0)
+        XCTAssertTrue(window.isOnScreen)
     }
-}
 
-private func testParsesWindowInfo() throws {
-    let dictionary = makeWindowDictionary(
-        id: 42,
-        ownerPID: 100,
-        ownerName: "Safari",
-        title: "Example Page",
-        bounds: CGRect(x: 10, y: 20, width: 800, height: 600)
-    )
+    func testRejectsMalformedDictionaries() {
+        XCTAssertNil(WindowScanner.parseWindowInfo([:]))
+    }
 
-    let window = try unwrap(WindowScanner.parseWindowInfo(dictionary))
+    func testFiltersIrrelevantWindows() {
+        let scanner = WindowScanner(currentProcessID: 999, ignoredOwnerNames: ["Dock"])
 
-    expectEqual(window.id, 42)
-    expectEqual(window.ownerPID, 100)
-    expectEqual(window.ownerName, "Safari")
-    expectEqual(window.title, "Example Page")
-    expectEqual(window.bounds, CGRect(x: 10, y: 20, width: 800, height: 600))
-    expectEqual(window.layer, 0)
-    expect(window.isOnScreen)
-}
+        XCTAssertTrue(scanner.isRelevantWindow(makeWindow()))
+        XCTAssertFalse(scanner.isRelevantWindow(makeWindow(ownerPID: 999)))
+        XCTAssertFalse(scanner.isRelevantWindow(makeWindow(ownerName: "Dock")))
+        XCTAssertTrue(scanner.isRelevantWindow(makeWindow(title: "   ")))
+        XCTAssertFalse(scanner.isRelevantWindow(makeWindow(layer: 1)))
+        XCTAssertFalse(scanner.isRelevantWindow(makeWindow(isOnScreen: false)))
+        XCTAssertFalse(scanner.isRelevantWindow(makeWindow(bounds: CGRect(x: 0, y: 0, width: 79, height: 600))))
+        XCTAssertFalse(scanner.isRelevantWindow(makeWindow(bounds: CGRect(x: 0, y: 0, width: 800, height: 39))))
+    }
 
-private func testRejectsMalformedDictionaries() {
-    expect(WindowScanner.parseWindowInfo([:]) == nil)
-}
+    func testScansRelevantWindowsInStableOrder() {
+        let provider = StubWindowInfoProvider(windows: [
+            makeWindowDictionary(id: 3, ownerPID: 100, ownerName: "Safari", title: "Zeta"),
+            makeWindowDictionary(id: 4, ownerPID: 100, ownerName: "Dock", title: "Dock Window"),
+            makeWindowDictionary(id: 2, ownerPID: 101, ownerName: "Finder", title: "Downloads"),
+            makeWindowDictionary(id: 1, ownerPID: 102, ownerName: "Finder", title: "Applications"),
+        ])
+        let scanner = WindowScanner(currentProcessID: 999, provider: provider, ignoredOwnerNames: ["Dock"])
 
-private func testFiltersIrrelevantWindows() {
-    let scanner = WindowScanner(currentProcessID: 999, ignoredOwnerNames: ["Dock"])
+        let windows = scanner.scan(options: .optionAll)
 
-    expect(scanner.isRelevantWindow(makeWindow()))
-    expect(!scanner.isRelevantWindow(makeWindow(ownerPID: 999)))
-    expect(!scanner.isRelevantWindow(makeWindow(ownerName: "Dock")))
-    expect(scanner.isRelevantWindow(makeWindow(title: "   ")))
-    expect(!scanner.isRelevantWindow(makeWindow(layer: 1)))
-    expect(!scanner.isRelevantWindow(makeWindow(isOnScreen: false)))
-    expect(!scanner.isRelevantWindow(makeWindow(bounds: CGRect(x: 0, y: 0, width: 79, height: 600))))
-    expect(!scanner.isRelevantWindow(makeWindow(bounds: CGRect(x: 0, y: 0, width: 800, height: 39))))
-}
+        XCTAssertEqual(windows.map(\.id), [1, 2, 3])
+    }
 
-private func testScansRelevantWindowsInStableOrder() {
-    let provider = StubWindowInfoProvider(windows: [
-        makeWindowDictionary(id: 3, ownerPID: 100, ownerName: "Safari", title: "Zeta"),
-        makeWindowDictionary(id: 4, ownerPID: 100, ownerName: "Dock", title: "Dock Window"),
-        makeWindowDictionary(id: 2, ownerPID: 101, ownerName: "Finder", title: "Downloads"),
-        makeWindowDictionary(id: 1, ownerPID: 102, ownerName: "Finder", title: "Applications"),
-    ])
-    let scanner = WindowScanner(currentProcessID: 999, provider: provider, ignoredOwnerNames: ["Dock"])
+    func testVisibleScanUsesActiveSpaceOptions() {
+        let provider = StubWindowInfoProvider(windows: [makeWindowDictionary()])
+        let scanner = WindowScanner(currentProcessID: 999, provider: provider)
 
-    let windows = scanner.scan(options: .optionAll)
+        _ = scanner.scanVisibleWindows()
 
-    expectEqual(windows.map(\.id), [1, 2, 3])
-}
+        XCTAssertEqual(provider.requestedOptions, [.optionOnScreenOnly, .excludeDesktopElements])
+    }
 
-private func testVisibleScanUsesActiveSpaceOptions() {
-    let provider = StubWindowInfoProvider(windows: [makeWindowDictionary()])
-    let scanner = WindowScanner(currentProcessID: 999, provider: provider)
+    func testScansUntitledWindows() {
+        let provider = StubWindowInfoProvider(windows: [
+            makeWindowDictionary(id: 1, ownerPID: 100, ownerName: "Safari", title: "")
+        ])
+        let scanner = WindowScanner(currentProcessID: 999, provider: provider)
 
-    _ = scanner.scanVisibleWindows()
+        let windows = scanner.scan(options: .optionAll)
 
-    expectEqual(provider.requestedOptions, [.optionOnScreenOnly, .excludeDesktopElements])
-}
+        XCTAssertEqual(windows.map(\.displayTitle), ["Safari"])
+    }
 
-private func testScansUntitledWindows() {
-    let provider = StubWindowInfoProvider(windows: [
-        makeWindowDictionary(id: 1, ownerPID: 100, ownerName: "Safari", title: "")
-    ])
-    let scanner = WindowScanner(currentProcessID: 999, provider: provider)
+    func testDisplayTitleFallback() {
+        XCTAssertEqual(makeWindow(ownerName: "Preview", title: "").displayTitle, "Preview")
+        XCTAssertEqual(makeWindow(ownerName: "Preview", title: "Document.pdf").displayTitle, "Document.pdf")
+    }
 
-    let windows = scanner.scan(options: .optionAll)
+    func testWindowInfoReplacingTitle() {
+        let original = makeWindow(id: 12, ownerName: "Safari", title: "")
+        let updated = original.replacingTitle("Example Page")
 
-    expectEqual(windows.map(\.displayTitle), ["Safari"])
-}
+        XCTAssertEqual(updated.id, original.id)
+        XCTAssertEqual(updated.ownerPID, original.ownerPID)
+        XCTAssertEqual(updated.ownerName, original.ownerName)
+        XCTAssertEqual(updated.bounds, original.bounds)
+        XCTAssertEqual(updated.title, "Example Page")
+        XCTAssertEqual(updated.displayTitle, "Example Page")
+    }
 
-private func testDisplayTitleFallback() {
-    expectEqual(makeWindow(ownerName: "Preview", title: "").displayTitle, "Preview")
-    expectEqual(makeWindow(ownerName: "Preview", title: "Document.pdf").displayTitle, "Document.pdf")
-}
+    func testWindowFramePolicySelectsMaximizedWindows() {
+        let policy = WindowFramePolicy(tolerance: 4)
+        let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
 
-private func testWindowInfoReplacingTitle() {
-    let original = makeWindow(id: 12, ownerName: "Safari", title: "")
-    let updated = original.replacingTitle("Example Page")
+        XCTAssertTrue(policy.shouldMoveMaximizedWindow(windowFrame: screen, screenFrame: screen, usableFrame: usable))
+        XCTAssertTrue(
+            policy.shouldMoveMaximizedWindow(
+                windowFrame: CGRect(x: 0, y: 1, width: 1440, height: 899),
+                screenFrame: screen,
+                usableFrame: usable
+            ))
+    }
 
-    expectEqual(updated.id, original.id)
-    expectEqual(updated.ownerPID, original.ownerPID)
-    expectEqual(updated.ownerName, original.ownerName)
-    expectEqual(updated.bounds, original.bounds)
-    expectEqual(updated.title, "Example Page")
-    expectEqual(updated.displayTitle, "Example Page")
-}
+    func testWindowFramePolicyHandlesRectangleMaximize() {
+        let policy = WindowFramePolicy(tolerance: 4)
+        let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+        let rectangleMaximized = CGRect(x: 0, y: 0, width: 1440, height: 875)
 
-private func testWindowFramePolicySelectsMaximizedWindows() {
-    let policy = WindowFramePolicy(tolerance: 4)
-    let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
-    let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+        XCTAssertTrue(
+            policy.shouldMoveMaximizedWindow(windowFrame: rectangleMaximized, screenFrame: screen, usableFrame: usable))
+    }
 
-    expect(policy.shouldMoveMaximizedWindow(windowFrame: screen, screenFrame: screen, usableFrame: usable))
-    expect(
-        policy.shouldMoveMaximizedWindow(
-            windowFrame: CGRect(x: 0, y: 1, width: 1440, height: 899),
-            screenFrame: screen,
-            usableFrame: usable
-        ))
-}
+    func testWindowFramePolicySkipsAdjustedAndManualWindows() {
+        let policy = WindowFramePolicy(tolerance: 4)
+        let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+        let manual = CGRect(x: 120, y: 80, width: 900, height: 700)
 
-private func testWindowFramePolicyHandlesRectangleMaximize() {
-    let policy = WindowFramePolicy(tolerance: 4)
-    let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
-    let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
-    let rectangleMaximized = CGRect(x: 0, y: 0, width: 1440, height: 875)
+        XCTAssertFalse(policy.shouldMoveMaximizedWindow(windowFrame: usable, screenFrame: screen, usableFrame: usable))
+        XCTAssertFalse(policy.shouldMoveMaximizedWindow(windowFrame: manual, screenFrame: screen, usableFrame: usable))
+        XCTAssertFalse(
+            policy.shouldMoveMaximizedWindow(
+                windowFrame: usable,
+                screenFrame: screen,
+                usableFrame: usable,
+                lastAppliedFrame: usable
+            ))
 
-    expect(policy.shouldMoveMaximizedWindow(windowFrame: rectangleMaximized, screenFrame: screen, usableFrame: usable))
-}
-
-private func testWindowFramePolicySkipsAdjustedAndManualWindows() {
-    let policy = WindowFramePolicy(tolerance: 4)
-    let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
-    let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
-    let manual = CGRect(x: 120, y: 80, width: 900, height: 700)
-
-    expect(!policy.shouldMoveMaximizedWindow(windowFrame: usable, screenFrame: screen, usableFrame: usable))
-    expect(!policy.shouldMoveMaximizedWindow(windowFrame: manual, screenFrame: screen, usableFrame: usable))
-    expect(
-        !policy.shouldMoveMaximizedWindow(
-            windowFrame: usable,
-            screenFrame: screen,
-            usableFrame: usable,
-            lastAppliedFrame: usable
-        ))
-
-    let changedUsable = CGRect(x: 0, y: 64, width: 1440, height: 836)
-    expect(
-        policy.shouldMoveMaximizedWindow(
-            windowFrame: usable,
-            screenFrame: screen,
-            usableFrame: changedUsable,
-            lastAppliedFrame: usable
-        ))
+        let changedUsable = CGRect(x: 0, y: 64, width: 1440, height: 836)
+        XCTAssertTrue(
+            policy.shouldMoveMaximizedWindow(
+                windowFrame: usable,
+                screenFrame: screen,
+                usableFrame: changedUsable,
+                lastAppliedFrame: usable
+            ))
+    }
 }
 
 private func makeWindow(
@@ -213,40 +195,4 @@ private func makeWindowDictionary(
         kCGWindowLayer as String: NSNumber(value: layer),
         kCGWindowIsOnscreen as String: NSNumber(value: isOnScreen),
     ]
-}
-
-private func run(_ name: String, _ test: () throws -> Void) throws {
-    do {
-        try test()
-        print("✓ \(name)")
-    } catch {
-        print("✗ \(name)")
-        throw error
-    }
-}
-
-private func expect(_ condition: @autoclosure () -> Bool, file: StaticString = #file, line: UInt = #line) {
-    guard condition() else {
-        fatalError("Expectation failed at \(file):\(line)")
-    }
-}
-
-private func expectEqual<T: Equatable>(
-    _ lhs: @autoclosure () -> T,
-    _ rhs: @autoclosure () -> T,
-    file: StaticString = #file,
-    line: UInt = #line
-) {
-    let lhsValue = lhs()
-    let rhsValue = rhs()
-    guard lhsValue == rhsValue else {
-        fatalError("Expected \(lhsValue) == \(rhsValue) at \(file):\(line)")
-    }
-}
-
-private func unwrap<T>(_ value: T?, file: StaticString = #file, line: UInt = #line) throws -> T {
-    guard let value else {
-        fatalError("Expected non-nil value at \(file):\(line)")
-    }
-    return value
 }

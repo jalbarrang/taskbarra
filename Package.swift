@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "Taskbarra",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -19,9 +20,10 @@ let package = Package(
         .executableTarget(
             name: "Taskbarra",
             dependencies: ["TaskbarraCore"],
-            path: "Sources/Taskbarra"
+            path: "Sources/Taskbarra",
+            resources: [.process("Resources")]
         ),
-        .executableTarget(
+        .testTarget(
             name: "TaskbarraCoreTests",
             dependencies: ["TaskbarraCore"],
             path: "Tests/TaskbarraCoreTests"

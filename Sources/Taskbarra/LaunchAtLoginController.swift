@@ -7,7 +7,10 @@ enum LaunchAtLoginError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unsupportedStatus(let status):
-            "Launch at login cannot be changed while the service status is \(status.description)."
+            String(
+                format: L10n.text("launch_at_login.error.unsupported_status"),
+                status.description
+            )
         }
     }
 }
@@ -43,15 +46,15 @@ extension SMAppService.Status {
     fileprivate var description: String {
         switch self {
         case .notRegistered:
-            "not registered"
+            L10n.text("launch_at_login.status.not_registered")
         case .enabled:
-            "enabled"
+            L10n.text("launch_at_login.status.enabled")
         case .requiresApproval:
-            "requires approval"
+            L10n.text("launch_at_login.status.requires_approval")
         case .notFound:
-            "not found"
+            L10n.text("launch_at_login.status.not_found")
         @unknown default:
-            "unknown"
+            L10n.text("launch_at_login.status.unknown")
         }
     }
 }

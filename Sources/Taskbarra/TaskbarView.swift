@@ -8,7 +8,7 @@ struct TaskbarView: View {
         HStack(spacing: 8) {
             Group {
                 if windowStore.windows.isEmpty {
-                    Text("Sin ventanas detectadas")
+                    Text(L10n.text("taskbar.empty"))
                         .font(.system(size: 12))
                         .foregroundStyle(.white.opacity(0.68))
                 } else {
@@ -28,11 +28,13 @@ struct TaskbarView: View {
                                 }
                                 .contextMenu {
                                     Button(
-                                        windowStore.minimizedWindowIDs.contains(window.id) ? "Restaurar" : "Minimizar"
+                                        windowStore.minimizedWindowIDs.contains(window.id)
+                                            ? L10n.text("taskbar.context.restore")
+                                            : L10n.text("taskbar.context.minimize")
                                     ) {
                                         interactionController.minimizeOrRestore(window: window)
                                     }
-                                    Button("Cerrar ventana") {
+                                    Button(L10n.text("taskbar.context.close_window")) {
                                         interactionController.close(window: window)
                                     }
                                     Divider()

@@ -13,7 +13,7 @@ final class AccessibilityOnboardingWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Taskbarra Setup"
+        window.title = L10n.text("accessibility.onboarding.window_title")
         window.isReleasedWhenClosed = false
         window.center()
         window.appearance = NSAppearance(named: .darkAqua)
