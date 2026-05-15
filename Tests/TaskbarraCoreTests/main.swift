@@ -29,6 +29,8 @@ struct TestRunner {
             "window frame policy selects maximized windows that overlap taskbar",
             testWindowFramePolicySelectsMaximizedWindows)
         try run(
+            "window frame policy handles Rectangle maximized windows", testWindowFramePolicyHandlesRectangleMaximize)
+        try run(
             "window frame policy skips adjusted and manual windows", testWindowFramePolicySkipsAdjustedAndManualWindows)
         print("All TaskbarraCore tests passed")
     }
@@ -111,6 +113,15 @@ private func testWindowFramePolicySelectsMaximizedWindows() {
             screenFrame: screen,
             usableFrame: usable
         ))
+}
+
+private func testWindowFramePolicyHandlesRectangleMaximize() {
+    let policy = WindowFramePolicy(tolerance: 4)
+    let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let usable = CGRect(x: 0, y: 48, width: 1440, height: 852)
+    let rectangleMaximized = CGRect(x: 0, y: 0, width: 1440, height: 875)
+
+    expect(policy.shouldMoveMaximizedWindow(windowFrame: rectangleMaximized, screenFrame: screen, usableFrame: usable))
 }
 
 private func testWindowFramePolicySkipsAdjustedAndManualWindows() {

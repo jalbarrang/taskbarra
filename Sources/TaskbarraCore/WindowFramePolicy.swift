@@ -38,7 +38,10 @@ public struct WindowFramePolicy: Sendable {
             approximatelyEqual(windowFrame.minY, screenFrame.minY)
             && approximatelyEqual(windowFrame.maxY, screenFrame.maxY)
         let overlapsReservedTaskbar = windowFrame.minY < usableFrame.minY - tolerance
-        return fillsScreen || (spansScreenWidth && touchesTopAndBottom && overlapsReservedTaskbar)
+        let fillsUsableHeight = windowFrame.height >= usableFrame.height - tolerance
+        let reachesVerticalBounds = touchesTopAndBottom || fillsUsableHeight
+        let isFullWidthMaximized = spansScreenWidth && overlapsReservedTaskbar && reachesVerticalBounds
+        return fillsScreen || isFullWidthMaximized
     }
 
     public func isApproximatelyEqual(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
