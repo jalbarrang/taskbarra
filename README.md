@@ -91,7 +91,15 @@ Taskbarra asks for Full Disk Access so it can read macOS Notification Center's l
 
 Taskbarra opens this database read-only. It does not modify Notification Center data, mark system notifications as read, or upload notification contents. Notification badge state is tracked locally with a per-bundle-id "last seen" timestamp when you activate an app/window from Taskbarra or choose "Mark Notifications as Seen".
 
-This integration depends on private macOS storage owned by `usernoted`. Apple can change the schema, path, or access behavior in any macOS release, and notification titles/bodies can contain sensitive data. If notification preview controls are added in configuration, disable or limit previews there; until then, revoke Full Disk Access from System Settings > Privacy & Security > Full Disk Access to disable notification reading entirely.
+This integration depends on private macOS storage owned by `usernoted`. Apple can change the schema, path, or access behavior in any macOS release, and notification titles/bodies can contain sensitive data.
+
+Notification previews are controlled by local `UserDefaults` keys:
+
+- `showNotificationPreviews` (`true` by default): when `false`, menus show generic notification labels instead of titles/bodies.
+- `excludedNotificationBundleIdentifiers` (empty by default): bundle ids to omit from notification menus/badges.
+- `maxNotificationAge` (7 days by default): maximum age in seconds for notifications shown by Taskbarra.
+
+To disable notification reading entirely, revoke Full Disk Access from System Settings > Privacy & Security > Full Disk Access.
 
 ## Native Dock collision
 

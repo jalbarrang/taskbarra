@@ -30,6 +30,7 @@ final class NotificationCenterDatabaseReaderTests: XCTestCase {
         XCTAssertEqual(notification.badge, 7)
         XCTAssertEqual(notification.notificationIdentifier, "notification-1")
         XCTAssertEqual(notification.threadIdentifier, "thread-1")
+        XCTAssertEqual(notification.deepLink, URL(string: "discord://channels/1/2/3"))
         XCTAssertEqual(notification.deliveredAt, Date(timeIntervalSinceReferenceDate: 123_456))
     }
 
@@ -82,6 +83,7 @@ final class NotificationCenterDatabaseReaderTests: XCTestCase {
                     "body": "Taskbarra tests passed",
                     "iden": "notification-1",
                     "thre": "thread-1",
+                    "usda": ["fallbackDeepLink": "discord://channels/1/2/3"],
                 ],
             ],
             format: .binary,

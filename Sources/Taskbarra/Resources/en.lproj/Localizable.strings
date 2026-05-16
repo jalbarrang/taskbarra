@@ -16,6 +16,7 @@
 "taskbar.context.options" = "Options";
 "taskbar.context.notifications" = "Notifications";
 "taskbar.context.notification_untitled" = "Untitled notification";
+"taskbar.context.notification_hidden" = "Notification";
 "taskbar.context.mark_notifications_seen" = "Mark Notifications as Seen";
 "taskbar.context.section.windows" = "Windows";
 "taskbar.context.section.notifications" = "Notifications";

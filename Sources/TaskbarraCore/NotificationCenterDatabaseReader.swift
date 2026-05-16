@@ -11,6 +11,7 @@ public struct AppNotification: Equatable, Identifiable, Sendable {
     public let badge: Int?
     public let notificationIdentifier: String?
     public let threadIdentifier: String?
+    public let deepLink: URL?
 
     public init(
         id: Int64,
@@ -21,7 +22,8 @@ public struct AppNotification: Equatable, Identifiable, Sendable {
         presented: Bool,
         badge: Int?,
         notificationIdentifier: String?,
-        threadIdentifier: String?
+        threadIdentifier: String?,
+        deepLink: URL? = nil
     ) {
         self.id = id
         self.bundleIdentifier = bundleIdentifier
@@ -32,6 +34,7 @@ public struct AppNotification: Equatable, Identifiable, Sendable {
         self.badge = badge
         self.notificationIdentifier = notificationIdentifier
         self.threadIdentifier = threadIdentifier
+        self.deepLink = deepLink
     }
 }
 
@@ -122,7 +125,8 @@ public struct NotificationCenterDatabaseReader: Sendable {
             presented: presented,
             badge: badge,
             notificationIdentifier: request?["iden"] as? String,
-            threadIdentifier: request?["thre"] as? String
+            threadIdentifier: request?["thre"] as? String,
+            deepLink: NotificationDeepLinkExtractor.deepLink(in: plist ?? [:])
         )
     }
 

@@ -52,8 +52,14 @@ struct TaskbarView: View {
                                     if !notifications.isEmpty {
                                         Section(L10n.text("taskbar.context.section.notifications")) {
                                             ForEach(notifications) { notification in
-                                                Button(notificationMenuTitle(notification)) {}
-                                                    .disabled(true)
+                                                if let deepLink = notification.deepLink {
+                                                    Button(notificationMenuTitle(notification)) {
+                                                        NSWorkspace.shared.open(deepLink)
+                                                    }
+                                                } else {
+                                                    Button(notificationMenuTitle(notification)) {}
+                                                        .disabled(true)
+                                                }
                                             }
                                             Button(L10n.text("taskbar.context.mark_notifications_seen")) {
                                                 notificationStore.markSeen(ownerPID: window.ownerPID)
@@ -131,8 +137,17 @@ struct TaskbarView: View {
     }
 
     private func notificationMenuTitle(_ notification: AppNotification) -> String {
-        let title = notification.title ?? L10n.text("taskbar.context.notification_untitled")
-        guard let body = notification.body, !body.isEmpty else { return title }
+        let title = NotificationPrivacyFilter.displayTitle(
+            for: notification,
+            configuration: notificationStore.privacyConfiguration
+        ) ?? L10n.text("taskbar.context.notification_hidden")
+        guard
+            let body = NotificationPrivacyFilter.displayBody(
+                for: notification,
+                configuration: notificationStore.privacyConfiguration
+            ),
+            !body.isEmpty
+        else { return title }
         return "\(title) — \(body)"
     }
 }

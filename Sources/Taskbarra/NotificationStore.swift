@@ -8,14 +8,17 @@ final class NotificationStore: ObservableObject {
 
     private let reader: NotificationCenterDatabaseReader
     private let lastSeenStore: NotificationLastSeenStore
+    private let privacySettingsStore: NotificationPrivacySettingsStore
     private var timer: Timer?
 
     init(
         reader: NotificationCenterDatabaseReader = NotificationCenterDatabaseReader(),
-        lastSeenStore: NotificationLastSeenStore = NotificationLastSeenStore()
+        lastSeenStore: NotificationLastSeenStore = NotificationLastSeenStore(),
+        privacySettingsStore: NotificationPrivacySettingsStore = NotificationPrivacySettingsStore()
     ) {
         self.reader = reader
         self.lastSeenStore = lastSeenStore
+        self.privacySettingsStore = privacySettingsStore
     }
 
     func startMonitoring() {
@@ -36,7 +39,14 @@ final class NotificationStore: ObservableObject {
     func refresh() {
         do {
             let notifications = try reader.readRecentNotifications(limit: 200)
-            notificationsByBundleIdentifier = Dictionary(grouping: notifications, by: normalizedBundleIdentifier)
+            let filteredNotifications = NotificationPrivacyFilter.filter(
+                notifications: notifications,
+                configuration: privacyConfiguration
+            )
+            notificationsByBundleIdentifier = Dictionary(
+                grouping: filteredNotifications,
+                by: normalizedBundleIdentifier
+            )
         } catch {
             notificationsByBundleIdentifier = [:]
         }
@@ -58,6 +68,10 @@ final class NotificationStore: ObservableObject {
 
     func notificationCount(forOwnerPID ownerPID: pid_t) -> Int {
         notificationSummary(forOwnerPID: ownerPID)?.badgeCount ?? 0
+    }
+
+    var privacyConfiguration: NotificationPrivacyConfiguration {
+        privacySettingsStore.configuration
     }
 
     func markSeen(ownerPID: pid_t) {
