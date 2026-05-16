@@ -2,6 +2,10 @@
 
 Taskbarra is a macOS-only Dock replacement prototype written in Swift. Its core goal is to show one taskbar entry per window, with app icon + window title, instead of macOS Dock's app-level grouping.
 
+## Status and discretion
+
+Taskbarra is personal-use software, not a polished public product. Use it with discretion: it relies on sensitive macOS capabilities such as Accessibility access and optional read-only access to the local Notification Center database. This project has also been generated and modified mostly with LLM assistance, so review changes, keep backups, and treat the app as experimental software.
+
 See [`CONTEXT.md`](./CONTEXT.md) for product and architecture decisions.
 
 ## Requirements

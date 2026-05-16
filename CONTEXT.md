@@ -1,6 +1,8 @@
 # Taskbarra
 
-Reemplazo del Dock de macOS con una barra de tareas compacta estilo Windows que muestra cada ventana como una entrada individual.
+Reemplazo personal y experimental del Dock de macOS con una barra de tareas compacta estilo Windows que muestra cada ventana como una entrada individual.
+
+> Nota de estado: Taskbarra es software de uso personal, no un producto público pulido. Requiere discreción del usuario porque usa permisos sensibles de macOS y ha sido generado/modificado mayormente con asistencia de LLMs.
 
 ## Problema
 
