@@ -9,9 +9,11 @@ final class WindowStore {
     private let scanner: WindowScanner
     private let iconProvider: ApplicationIconProvider
     private let titleResolver: WindowTitleResolver
+    private let passiveAXScanner: PassiveAXWindowScanning
+    private let snapshotMatcher: WindowSnapshotMatcher
     private var refreshTask: Task<Void, Never>?
     private var eventMonitor: AXWindowEventMonitor?
-    var onRefresh: (([WindowInfo]) -> Void)?
+    var onPassiveSnapshotDidChange: (([WindowInfo]) -> Void)?
 
     private(set) var windows: [WindowInfo] = []
     private(set) var appIconsByWindowID: [WindowInfo.ID: NSImage] = [:]
@@ -22,19 +24,23 @@ final class WindowStore {
     init(
         scanner: WindowScanner = WindowScanner(),
         iconProvider: ApplicationIconProvider = ApplicationIconProvider(),
-        titleResolver: WindowTitleResolver = WindowTitleResolver()
+        titleResolver: WindowTitleResolver = WindowTitleResolver(),
+        passiveAXScanner: PassiveAXWindowScanning = PassiveAXWindowScanner(),
+        snapshotMatcher: WindowSnapshotMatcher = WindowSnapshotMatcher()
     ) {
         self.scanner = scanner
         self.iconProvider = iconProvider
         self.titleResolver = titleResolver
+        self.passiveAXScanner = passiveAXScanner
+        self.snapshotMatcher = snapshotMatcher
     }
 
     func startMonitoring() {
-        refresh()
+        refreshPassiveSnapshot()
 
         eventMonitor?.stop()
         let monitor = AXWindowEventMonitor { [weak self] in
-            self?.refresh()
+            self?.refreshPassiveSnapshot()
         }
         eventMonitor = monitor
         monitor.start()
@@ -55,18 +61,21 @@ final class WindowStore {
             while !Task.isCancelled {
                 try? await Task.sleep(for: interval)
                 await MainActor.run {
-                    self?.refresh()
+                    self?.refreshPassiveSnapshot()
                 }
             }
         }
     }
 
-    func refresh() {
+    func refreshPassiveSnapshot() {
         let windowsInStackingOrder = scanner.scanVisibleWindowsInStackingOrder().map(enrichTitle)
-        let scannedWindows = windowsInStackingOrder.sorted(by: WindowScanner.windowSortOrder)
+        let minimizedWindows = passiveAXScanner.scanMinimizedWindows()
+            .filter { snapshotMatcher.visibleCounterpart(for: $0, in: windowsInStackingOrder) == nil }
+            .map { $0.windowInfo() }
+        let scannedWindows = (windowsInStackingOrder + minimizedWindows).sorted(by: WindowScanner.windowSortOrder)
         windows = scannedWindows
         activeWindowID = windowsInStackingOrder.first(where: isFrontmostApplicationWindow)?.id
-        minimizedWindowIDs = []
+        minimizedWindowIDs = Set(minimizedWindows.map(\.id))
         appIconsByWindowID = Dictionary(
             uniqueKeysWithValues: scannedWindows.compactMap { window in
                 iconProvider.icon(forOwnerPID: window.ownerPID).map { icon in
@@ -75,7 +84,7 @@ final class WindowStore {
             }
         )
         lastRefresh = Date()
-        onRefresh?(scannedWindows)
+        onPassiveSnapshotDidChange?(scannedWindows)
     }
 
     private func enrichTitle(_ window: WindowInfo) -> WindowInfo {
@@ -87,4 +96,5 @@ final class WindowStore {
     private func isFrontmostApplicationWindow(_ window: WindowInfo) -> Bool {
         NSWorkspace.shared.frontmostApplication?.processIdentifier == window.ownerPID
     }
+
 }

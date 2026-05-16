@@ -101,6 +101,22 @@ Notification previews are controlled by local `UserDefaults` keys:
 
 To disable notification reading entirely, revoke Full Disk Access from System Settings > Privacy & Security > Full Disk Access.
 
+## Passive window enumeration
+
+Taskbarra separates passive window discovery from explicit user actions:
+
+- `WindowScanner` uses CoreGraphics `CGWindowListCopyWindowInfo` as the primary read-only source for visible windows.
+- `WindowStore.refreshPassiveSnapshot()` builds the taskbar snapshot without activating, raising, focusing, minimizing, closing, moving, or resizing windows.
+- `PassiveAXWindowScanner` uses Accessibility attribute reads to discover minimized windows and missing metadata without activating apps.
+- `WindowSnapshotMatcher` correlates CoreGraphics windows with passive AX snapshots using PID, compatible titles, and tolerant frame matching.
+- `WindowInteractionController` owns explicit user actions such as activate, raise, minimize, close, hide, quit, force quit, and relaunch.
+
+Accessibility permission is still required for AX metadata and actions. Some apps, especially Electron, Chromium, Java, games, and heavily custom UIs, may expose incomplete or inconsistent AX window data. Minimized windows do not always have a CoreGraphics window id, so Taskbarra assigns deterministic synthetic ids for passive AX-only snapshots. Ambiguous matches are intentionally ignored instead of guessing.
+
+Taskbarra also has a separate layout-management phase: `AXWindowWorkAreaCoordinator` may move/resize maximized windows to reserve the taskbar work area. That is not part of discovery; it is an explicit coordinator phase wired by `TaskbarWindowController` after passive snapshots change.
+
+See [`docs/adr/0002-passive-window-enumeration.md`](./docs/adr/0002-passive-window-enumeration.md) for the detailed API boundary and audit.
+
 ## Native Dock collision
 
 Taskbarra intentionally does not try to block the native macOS Dock hover trigger while it is open. That trigger is a system-level edge behavior and blocking it would require brittle global preference changes, private APIs, or unreliable transparent event shields.

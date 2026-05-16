@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import TaskbarraCore
 
 final class TaskbarWindowController: NSWindowController {
     private let barHeight = TaskbarGeometry.defaultHeight
@@ -26,7 +27,7 @@ final class TaskbarWindowController: NSWindowController {
         TaskbarWindowConfigurator().configure(panel)
 
         let interactionController = WindowInteractionController(refreshWindows: { [weak windowStore] in
-            windowStore?.refresh()
+            windowStore?.refreshPassiveSnapshot()
         })
         let rootView = TaskbarView(
             windowStore: windowStore,
@@ -64,8 +65,8 @@ final class TaskbarWindowController: NSWindowController {
         self.rectangleCompatibilityCoordinator = RectangleCompatibilityCoordinator()
         self.placementObserver = TaskbarPlacementObserver {}
         super.init(window: window)
-        windowStore.onRefresh = { [weak self] windows in
-            self?.workAreaCoordinator.reconcile(windows: windows)
+        windowStore.onPassiveSnapshotDidChange = { [weak self] windows in
+            self?.reconcileWorkAreaAfterPassiveDiscovery(windows: windows)
         }
         self.placementObserver = TaskbarPlacementObserver { [weak self] in
             self?.applyCurrentPlacement()
@@ -98,6 +99,10 @@ final class TaskbarWindowController: NSWindowController {
         rectangleCompatibilityCoordinator.reserveTaskbarSpaceIfRectangleIsPresent(taskbarHeight: geometry.barHeight)
         window?.setFrame(geometry.taskbarFrame, display: true)
         window?.orderFrontRegardless()
-        workAreaCoordinator.reconcile(windows: windowStore.windows)
+        reconcileWorkAreaAfterPassiveDiscovery(windows: windowStore.windows)
+    }
+
+    private func reconcileWorkAreaAfterPassiveDiscovery(windows: [WindowInfo]) {
+        workAreaCoordinator.reconcile(windows: windows)
     }
 }
