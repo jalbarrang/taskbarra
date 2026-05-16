@@ -9,5 +9,17 @@
 .swiftpm/
 .DS_Store
 
+# Xcode / Apple build artifacts
+DerivedData/
+*.xcuserstate
+*.xcresult
+*.dSYM/
+*.app/
+*.ipa
+
+# Local environment / secrets
+.env
+.env.*
+
 # Editor-local config
 .vscode/
