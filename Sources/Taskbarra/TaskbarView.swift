@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import TaskbarraCore
 
@@ -5,6 +6,8 @@ struct TaskbarView: View {
     let windowStore: WindowStore
     let notificationStore: NotificationStore
     let interactionController: WindowInteractionController
+
+    private let deepLinkPolicy = NotificationDeepLinkPolicy()
 
     var body: some View {
         HStack(spacing: 8) {
@@ -53,9 +56,10 @@ struct TaskbarView: View {
                                         Section(L10n.text("taskbar.context.section.notifications")) {
                                             ForEach(notifications) { notification in
                                                 if let deepLink = notification.deepLink {
-                                                    Button(notificationMenuTitle(notification)) {
-                                                        NSWorkspace.shared.open(deepLink)
+                                                    Button(notificationMenuTitle(notification, deepLink: deepLink)) {
+                                                        openNotificationDeepLink(deepLink)
                                                     }
+                                                    .disabled(deepLinkPolicy.decision(for: deepLink) == .block)
                                                 } else {
                                                     Button(notificationMenuTitle(notification)) {}
                                                         .disabled(true)
@@ -149,5 +153,58 @@ struct TaskbarView: View {
             !body.isEmpty
         else { return title }
         return "\(title) — \(body)"
+    }
+
+    private func notificationMenuTitle(_ notification: AppNotification, deepLink: URL) -> String {
+        let scheme = deepLinkPolicy.schemeDescription(for: deepLink)
+        let destination = deepLink.absoluteString
+        return String(
+            format: L10n.text("taskbar.context.notification_open_destination"),
+            notificationMenuTitle(notification),
+            scheme,
+            destination
+        )
+    }
+
+    private func openNotificationDeepLink(_ deepLink: URL) {
+        switch deepLinkPolicy.decision(for: deepLink) {
+        case .allow:
+            NSWorkspace.shared.open(deepLink)
+        case .confirm:
+            if confirmOpeningNotificationDeepLink(deepLink) {
+                NSWorkspace.shared.open(deepLink)
+            }
+        case .block:
+            showBlockedNotificationDeepLinkAlert(deepLink)
+        }
+    }
+
+    private func confirmOpeningNotificationDeepLink(_ deepLink: URL) -> Bool {
+        let scheme = deepLinkPolicy.schemeDescription(for: deepLink)
+        let alert = NSAlert()
+        alert.messageText = L10n.text("notification.deep_link.confirm.title")
+        alert.informativeText = String(
+            format: L10n.text("notification.deep_link.confirm.message"),
+            scheme,
+            deepLink.absoluteString
+        )
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L10n.text("notification.deep_link.confirm.open"))
+        alert.addButton(withTitle: L10n.text("notification.deep_link.confirm.cancel"))
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    private func showBlockedNotificationDeepLinkAlert(_ deepLink: URL) {
+        let scheme = deepLinkPolicy.schemeDescription(for: deepLink)
+        let alert = NSAlert()
+        alert.messageText = L10n.text("notification.deep_link.blocked.title")
+        alert.informativeText = String(
+            format: L10n.text("notification.deep_link.blocked.message"),
+            scheme,
+            deepLink.absoluteString
+        )
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L10n.text("common.ok"))
+        alert.runModal()
     }
 }

@@ -26,9 +26,9 @@ bd close <id>         # Complete work
 1. **File issues for remaining work** - Create `bd` issues for anything that needs follow-up
 2. **Run quality gates** (if code changed) - Tests, linters, builds
 3. **Update issue status** - Close finished work with `bd close`, update in-progress items as needed
-4. **Let Beads handle task bookkeeping** - Use `bd` for issue status and its normal local commit/bookkeeping behavior
+4. **Create a Git commit for completed Beads work** - After closing a completed task, commit the code/docs changes and Beads bookkeeping together with a message that references the issue id
 5. **Verify local state** - Check `bd ready`/`bd show` and `git status` so the handoff is accurate
-6. **Hand off** - Summarize changed files, checks run, issue status, and any remaining work
+6. **Hand off** - Summarize changed files, checks run, issue status, commit hash, and any remaining work
 
 **CRITICAL RULES:**
 - Use `bd` as the source of truth for task state

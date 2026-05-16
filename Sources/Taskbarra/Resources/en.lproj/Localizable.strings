@@ -17,6 +17,7 @@
 "taskbar.context.notifications" = "Notifications";
 "taskbar.context.notification_untitled" = "Untitled notification";
 "taskbar.context.notification_hidden" = "Notification";
+"taskbar.context.notification_open_destination" = "%@ (%@ → %@)";
 "taskbar.context.mark_notifications_seen" = "Mark Notifications as Seen";
 "taskbar.context.section.windows" = "Windows";
 "taskbar.context.section.notifications" = "Notifications";
@@ -36,6 +37,12 @@
 "status.launch_at_login" = "Launch at Login";
 "status.quit" = "Quit Taskbarra";
 "status.launch_at_login_error.title" = "Could Not Update Launch at Login";
+"notification.deep_link.confirm.title" = "Open Notification Link?";
+"notification.deep_link.confirm.message" = "This notification wants to open the %@ link below:\n\n%@\n\nOnly open it if you trust the source app.";
+"notification.deep_link.confirm.open" = "Open Link";
+"notification.deep_link.confirm.cancel" = "Cancel";
+"notification.deep_link.blocked.title" = "Notification Link Blocked";
+"notification.deep_link.blocked.message" = "Taskbarra blocked this %@ link from a notification:\n\n%@";
 "common.ok" = "OK";
 "launch_at_login.error.unsupported_status" = "Launch at login cannot be changed while the service status is %@.";
 "launch_at_login.status.not_registered" = "not registered";
