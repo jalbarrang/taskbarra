@@ -109,6 +109,8 @@ Notification previews are controlled by local `UserDefaults` keys:
 - `excludedNotificationBundleIdentifiers` (empty by default): bundle ids to omit from notification menus/badges.
 - `maxNotificationAge` (7 days by default): maximum age in seconds for notifications shown by Taskbarra.
 
+To grant Full Disk Access, macOS requires a manual user action: open System Settings > Privacy & Security > Full Disk Access, click `+`, choose `Taskbarra.app`, and restart Taskbarra if prompted. Taskbarra can open the pane and reveal the app bundle, but it cannot add or enable itself automatically.
+
 To disable notification reading entirely, revoke Full Disk Access from System Settings > Privacy & Security > Full Disk Access.
 
 ## Passive window enumeration

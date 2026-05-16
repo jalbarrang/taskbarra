@@ -115,5 +115,9 @@ final class AppCoordinator {
         if let url {
             NSWorkspace.shared.open(url)
         }
+
+        if let appURL = Bundle.main.bundleURL as URL? {
+            NSWorkspace.shared.activateFileViewerSelecting([appURL])
+        }
     }
 }

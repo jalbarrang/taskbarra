@@ -5,8 +5,8 @@
 "permissions.onboarding.accessibility.body" = "Required to detect, activate, minimize, close, and arrange windows.";
 "permissions.onboarding.accessibility.open_settings" = "Open Accessibility";
 "permissions.onboarding.full_disk_access.title" = "Full Disk Access";
-"permissions.onboarding.full_disk_access.body" = "Required to read macOS Notification Center data for app badges and notification previews. Enable Taskbarra in Privacy & Security > Full Disk Access, then restart Taskbarra if macOS asks.";
-"permissions.onboarding.full_disk_access.open_settings" = "Open Full Disk Access";
+"permissions.onboarding.full_disk_access.body" = "Required to read macOS Notification Center data for app badges and notification previews. macOS will not add apps here automatically: click + in Privacy & Security > Full Disk Access, choose Taskbarra.app, then restart Taskbarra if macOS asks.";
+"permissions.onboarding.full_disk_access.open_settings" = "Open Full Disk Access & Show App";
 "permissions.onboarding.quit" = "Quit";
 "permissions.onboarding.waiting" = "Waiting for permissions…";
 "taskbar.empty" = "No windows detected";
