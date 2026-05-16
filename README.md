@@ -15,6 +15,12 @@ See [`CONTEXT.md`](./CONTEXT.md) for product and architecture decisions.
 
 This repo intentionally starts without an Xcode project. The current scaffold builds with Swift Package Manager and packages a local `.app` bundle via script.
 
+## Releases and versioning
+
+Taskbarra uses [Release Please](https://github.com/googleapis/release-please) with Conventional Commits to maintain semantic versioning and `CHANGELOG.md`. Pushes to `main` update or create a release PR; merging that PR creates the GitHub Release/tag.
+
+When a GitHub Release is published, the release build workflow creates a macOS `.app` archive. These personal builds use free ad-hoc signing (`codesign --sign -`) only so macOS can attach entitlements; they are **not** Developer ID signed or notarized. Expect Gatekeeper/TCC prompts, and keep treating the app as personal experimental software.
+
 ## Quality checks
 
 ```bash

@@ -1,0 +1,31 @@
+name: Release Build
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  macos-app:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app || true
+
+      - name: Build app bundle with ad-hoc signing
+        run: CONFIGURATION=release TASKBARRA_CODESIGN_IDENTITY=- ./Scripts/build-app.sh
+
+      - name: Archive app bundle
+        run: |
+          mkdir -p .build/release-artifacts
+          ditto -c -k --keepParent .build/Taskbarra.app .build/release-artifacts/Taskbarra-${{ github.event.release.tag_name }}-macos-ad-hoc.zip
+
+      - name: Upload release artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" .build/release-artifacts/*.zip --clobber
