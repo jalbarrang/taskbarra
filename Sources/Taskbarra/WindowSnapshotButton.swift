@@ -7,6 +7,7 @@ struct WindowSnapshotButton: View {
     let appIcon: NSImage?
     let isActive: Bool
     let isMinimized: Bool
+    let notificationCount: Int
     let action: () -> Void
 
     var body: some View {
@@ -42,6 +43,17 @@ struct WindowSnapshotButton: View {
         .frame(minWidth: 120, maxWidth: 240, alignment: .leading)
         .opacity(isMinimized ? 0.48 : 1)
         .background(backgroundStyle, in: RoundedRectangle(cornerRadius: 7))
+        .overlay(alignment: .topTrailing) {
+            if notificationCount > 0 {
+                Text(notificationBadgeText)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 5)
+                    .frame(minWidth: 16, minHeight: 16)
+                    .background(Color.red, in: Capsule())
+                    .offset(x: 5, y: -5)
+            }
+        }
         .overlay(alignment: .bottom) {
             Capsule()
                 .fill(indicatorColor)
@@ -57,6 +69,10 @@ struct WindowSnapshotButton: View {
 
     private var indicatorColor: Color {
         isActive ? Color.accentColor : Color.white.opacity(0.28)
+    }
+
+    private var notificationBadgeText: String {
+        notificationCount > 99 ? "99+" : String(notificationCount)
     }
 
     private var accessibilityLabel: String {

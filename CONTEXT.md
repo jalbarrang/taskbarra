@@ -13,7 +13,7 @@ macOS agrupa todas las ventanas de una app bajo un solo icono en el Dock. No hay
 | **Alcance** | Reemplazar solo el Dock (la Menu Bar se mantiene intacta) |
 | **Modelo de ventanas** | Una entrada por ventana, sin agrupación por app |
 | **Info por entrada** | Icono de la app + título de la ventana |
-| **Posición** | Borde inferior, siempre visible |
+| **Posición** | Borde inferior, siempre visible; la colisión con el Dock nativo se maneja moviendo el Dock o, a futuro, haciendo configurable la posición de Taskbarra |
 | **Reserva de espacio** | NSWindow con level alto + Accessibility API (`CGDisplaySetWorkArea` o equivalente) para que ventanas maximizadas no la cubran |
 | **Detección de ventanas** | `CGWindowListCopyWindowInfo` para snapshot + `AXUIElement` para eventos en tiempo real y acciones |
 | **Clic izquierdo** | Toggle: activa la ventana si no está al frente, minimiza si ya lo está |

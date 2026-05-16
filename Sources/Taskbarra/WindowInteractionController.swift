@@ -49,6 +49,70 @@ final class WindowInteractionController {
         refreshWindows()
     }
 
+    func activate(window: WindowInfo) {
+        guard let axWindow = resolver.findWindow(matching: window, includeMinimized: true) else { return }
+        restoreIfNeeded(axWindow)
+        activateApplication(ownerPID: window.ownerPID)
+        raise(axWindow)
+        refreshWindows()
+    }
+
+    func showAllWindows(forOwnerPID ownerPID: pid_t) {
+        NSRunningApplication(processIdentifier: ownerPID)?.unhide()
+        activateApplication(ownerPID: ownerPID)
+        refreshWindows()
+    }
+
+    func hideApplication(ownerPID: pid_t) {
+        NSRunningApplication(processIdentifier: ownerPID)?.hide()
+        refreshWindows()
+    }
+
+    func quitApplication(ownerPID: pid_t) {
+        NSRunningApplication(processIdentifier: ownerPID)?.terminate()
+        refreshWindows()
+    }
+
+    func forceQuitApplication(ownerPID: pid_t) {
+        NSRunningApplication(processIdentifier: ownerPID)?.forceTerminate()
+        refreshWindows()
+    }
+
+    func relaunchApplication(ownerPID: pid_t) {
+        guard let application = NSRunningApplication(processIdentifier: ownerPID) else { return }
+        let launchURL = application.bundleURL ?? application.executableURL
+        application.terminate()
+        guard let launchURL else { return }
+        NSWorkspace.shared.openApplication(at: launchURL, configuration: NSWorkspace.OpenConfiguration())
+    }
+
+    func openApplicationInFinder(ownerPID: pid_t) {
+        guard let bundleURL = NSRunningApplication(processIdentifier: ownerPID)?.bundleURL else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
+    }
+
+    func copyBundleIdentifier(ownerPID: pid_t) {
+        guard let bundleIdentifier = NSRunningApplication(processIdentifier: ownerPID)?.bundleIdentifier else { return }
+        copyToPasteboard(bundleIdentifier)
+    }
+
+    func copyProcessIdentifier(ownerPID: pid_t) {
+        copyToPasteboard(String(ownerPID))
+    }
+
+    func supportsRelaunch(ownerPID: pid_t) -> Bool {
+        guard let application = NSRunningApplication(processIdentifier: ownerPID) else { return false }
+        return application.bundleURL != nil || application.executableURL != nil
+    }
+
+    func supportsOpenInFinder(ownerPID: pid_t) -> Bool {
+        NSRunningApplication(processIdentifier: ownerPID)?.bundleURL != nil
+    }
+
+    func supportsCopyBundleIdentifier(ownerPID: pid_t) -> Bool {
+        NSRunningApplication(processIdentifier: ownerPID)?.bundleIdentifier != nil
+    }
+
     private func minimize(_ window: AXUIElement) {
         setMinimized(true, for: window)
     }
@@ -65,6 +129,11 @@ final class WindowInteractionController {
 
     private func activateApplication(ownerPID: pid_t) {
         NSRunningApplication(processIdentifier: ownerPID)?.activate(options: [.activateAllWindows])
+    }
+
+    private func copyToPasteboard(_ value: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
     }
 
     private func raise(_ window: AXUIElement) {

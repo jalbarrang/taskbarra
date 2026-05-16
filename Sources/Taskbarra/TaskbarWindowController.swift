@@ -4,6 +4,7 @@ import SwiftUI
 final class TaskbarWindowController: NSWindowController {
     private let barHeight = TaskbarGeometry.defaultHeight
     private let windowStore: WindowStore
+    private let notificationStore: NotificationStore
     private let workAreaReservation: WorkAreaReservation
     private let workAreaCoordinator: AXWindowWorkAreaCoordinator
     private let rectangleCompatibilityCoordinator: RectangleCompatibilityCoordinator
@@ -11,6 +12,7 @@ final class TaskbarWindowController: NSWindowController {
 
     convenience init() {
         let windowStore = WindowStore()
+        let notificationStore = NotificationStore()
         let workAreaReservation = WorkAreaReservation()
         let geometry = TaskbarGeometry.forMainScreen()
 
@@ -26,7 +28,11 @@ final class TaskbarWindowController: NSWindowController {
         let interactionController = WindowInteractionController(refreshWindows: { [weak windowStore] in
             windowStore?.refresh()
         })
-        let rootView = TaskbarView(windowStore: windowStore, interactionController: interactionController)
+        let rootView = TaskbarView(
+            windowStore: windowStore,
+            notificationStore: notificationStore,
+            interactionController: interactionController
+        )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .preferredColorScheme(.dark)
 
@@ -35,16 +41,24 @@ final class TaskbarWindowController: NSWindowController {
         self.init(
             window: panel,
             windowStore: windowStore,
+            notificationStore: notificationStore,
             workAreaReservation: workAreaReservation
         )
 
         windowStore.startMonitoring()
+        notificationStore.startMonitoring()
         placementObserver.start()
         applyCurrentPlacement()
     }
 
-    init(window: NSWindow?, windowStore: WindowStore, workAreaReservation: WorkAreaReservation) {
+    init(
+        window: NSWindow?,
+        windowStore: WindowStore,
+        notificationStore: NotificationStore = NotificationStore(),
+        workAreaReservation: WorkAreaReservation
+    ) {
         self.windowStore = windowStore
+        self.notificationStore = notificationStore
         self.workAreaReservation = workAreaReservation
         self.workAreaCoordinator = AXWindowWorkAreaCoordinator(workAreaReservation: workAreaReservation)
         self.rectangleCompatibilityCoordinator = RectangleCompatibilityCoordinator()
@@ -60,6 +74,7 @@ final class TaskbarWindowController: NSWindowController {
 
     required init?(coder: NSCoder) {
         self.windowStore = WindowStore()
+        self.notificationStore = NotificationStore()
         self.workAreaReservation = WorkAreaReservation()
         self.workAreaCoordinator = AXWindowWorkAreaCoordinator(workAreaReservation: workAreaReservation)
         self.rectangleCompatibilityCoordinator = RectangleCompatibilityCoordinator()

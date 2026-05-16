@@ -3,20 +3,27 @@ import Foundation
 
 @MainActor
 final class AppCoordinator {
-    private let permission: AccessibilityPermission
+    private let accessibilityPermission: AccessibilityPermission
+    private let fullDiskAccessPermission: FullDiskAccessPermission
     private var taskbarWindowController: TaskbarWindowController?
-    private var onboardingWindowController: AccessibilityOnboardingWindowController?
+    private var onboardingWindowController: PermissionsOnboardingWindowController?
     private var statusItemController: StatusItemController?
     private var permissionMonitorTask: Task<Void, Never>?
     private var hasAccessibilityPermission = false
+    private var hasFullDiskAccess = false
 
-    init(permission: AccessibilityPermission = AccessibilityPermission()) {
-        self.permission = permission
+    init(
+        accessibilityPermission: AccessibilityPermission = AccessibilityPermission(),
+        fullDiskAccessPermission: FullDiskAccessPermission = FullDiskAccessPermission()
+    ) {
+        self.accessibilityPermission = accessibilityPermission
+        self.fullDiskAccessPermission = fullDiskAccessPermission
     }
 
     func start() {
         statusItemController = StatusItemController()
-        hasAccessibilityPermission = permission.isTrusted()
+        hasAccessibilityPermission = accessibilityPermission.isTrusted()
+        hasFullDiskAccess = fullDiskAccessPermission.isGranted()
         applyCurrentPermissionState()
         startMonitoringPermission()
     }
@@ -41,15 +48,17 @@ final class AppCoordinator {
     }
 
     private func refreshPermissionState() {
-        let isTrusted = permission.isTrusted()
-        guard isTrusted != hasAccessibilityPermission else { return }
+        let isTrusted = accessibilityPermission.isTrusted()
+        let hasFullDiskAccess = fullDiskAccessPermission.isGranted()
+        guard isTrusted != hasAccessibilityPermission || hasFullDiskAccess != self.hasFullDiskAccess else { return }
 
         hasAccessibilityPermission = isTrusted
+        self.hasFullDiskAccess = hasFullDiskAccess
         applyCurrentPermissionState()
     }
 
     private func applyCurrentPermissionState() {
-        if hasAccessibilityPermission {
+        if hasAccessibilityPermission && hasFullDiskAccess {
             showTaskbar()
         } else {
             showOnboarding()
@@ -71,22 +80,38 @@ final class AppCoordinator {
         taskbarWindowController = nil
 
         if onboardingWindowController == nil {
-            onboardingWindowController = AccessibilityOnboardingWindowController(
-                openSystemSettings: { [weak self] in
+            onboardingWindowController = PermissionsOnboardingWindowController(
+                hasAccessibilityPermission: hasAccessibilityPermission,
+                hasFullDiskAccess: hasFullDiskAccess,
+                openAccessibilitySettings: { [weak self] in
                     self?.openAccessibilitySettings()
+                },
+                openFullDiskAccessSettings: { [weak self] in
+                    self?.openFullDiskAccessSettings()
                 },
                 quit: {
                     NSApp.terminate(nil)
                 }
+            )
+        } else {
+            onboardingWindowController?.update(
+                hasAccessibilityPermission: hasAccessibilityPermission,
+                hasFullDiskAccess: hasFullDiskAccess
             )
         }
         onboardingWindowController?.showWindow(nil)
     }
 
     private func openAccessibilitySettings() {
-        permission.promptForTrust()
-
+        accessibilityPermission.promptForTrust()
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+        if let url {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    private func openFullDiskAccessSettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
         if let url {
             NSWorkspace.shared.open(url)
         }
