@@ -14,7 +14,7 @@ final class NotificationPrivacySettingsStore {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
-            Key.showNotificationPreviews: true,
+            Key.showNotificationPreviews: false,
             Key.maxNotificationAge: 7 * 24 * 60 * 60,
         ])
     }

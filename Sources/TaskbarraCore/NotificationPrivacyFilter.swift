@@ -6,7 +6,7 @@ public struct NotificationPrivacyConfiguration: Equatable, Sendable {
     public let maxNotificationAge: TimeInterval
 
     public init(
-        showNotificationPreviews: Bool = true,
+        showNotificationPreviews: Bool = false,
         excludedBundleIdentifiers: Set<String> = [],
         maxNotificationAge: TimeInterval = 7 * 24 * 60 * 60
     ) {

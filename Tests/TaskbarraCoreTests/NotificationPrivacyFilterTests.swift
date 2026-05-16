@@ -26,12 +26,20 @@ final class NotificationPrivacyFilterTests: XCTestCase {
         XCTAssertEqual(filtered, [visible])
     }
 
-    func testHidesPreviewTextWhenDisabled() {
+    func testDefaultConfigurationHidesPreviewText() {
         let notification = makeNotification(bundleIdentifier: "com.example.app", deliveredAt: Date())
-        let configuration = NotificationPrivacyConfiguration(showNotificationPreviews: false)
+        let configuration = NotificationPrivacyConfiguration()
 
         XCTAssertNil(NotificationPrivacyFilter.displayTitle(for: notification, configuration: configuration))
         XCTAssertNil(NotificationPrivacyFilter.displayBody(for: notification, configuration: configuration))
+    }
+
+    func testShowsPreviewTextWhenEnabled() {
+        let notification = makeNotification(bundleIdentifier: "com.example.app", deliveredAt: Date())
+        let configuration = NotificationPrivacyConfiguration(showNotificationPreviews: true)
+
+        XCTAssertEqual(NotificationPrivacyFilter.displayTitle(for: notification, configuration: configuration), "Secret title")
+        XCTAssertEqual(NotificationPrivacyFilter.displayBody(for: notification, configuration: configuration), "Secret body")
     }
 
     private func makeNotification(bundleIdentifier: String, deliveredAt: Date?) -> AppNotification {

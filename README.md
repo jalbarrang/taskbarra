@@ -95,7 +95,7 @@ This integration depends on private macOS storage owned by `usernoted`. Apple ca
 
 Notification previews are controlled by local `UserDefaults` keys:
 
-- `showNotificationPreviews` (`true` by default): when `false`, menus show generic notification labels instead of titles/bodies.
+- `showNotificationPreviews` (`false` by default): Taskbarra uses privacy-first defaults and shows generic notification labels instead of titles/bodies until previews are explicitly enabled.
 - `excludedNotificationBundleIdentifiers` (empty by default): bundle ids to omit from notification menus/badges.
 - `maxNotificationAge` (7 days by default): maximum age in seconds for notifications shown by Taskbarra.
 
