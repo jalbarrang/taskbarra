@@ -20,27 +20,20 @@ struct WindowSnapshotButton: View {
     }
 
     private var content: some View {
-        HStack(spacing: 7) {
+        Group {
             if let appIcon {
                 Image(nsImage: appIcon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 18, height: 18)
+                    .frame(width: 22, height: 22)
             } else {
                 Image(systemName: "macwindow")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(.white.opacity(0.65))
-                    .frame(width: 18, height: 18)
+                    .frame(width: 22, height: 22)
             }
-
-            Text(window.displayTitle)
-                .font(.system(size: 12, weight: .medium))
-                .lineLimit(1)
-                .foregroundStyle(.white.opacity(0.90))
         }
-        .padding(.horizontal, 10)
-        .frame(height: 34)
-        .frame(minWidth: 120, maxWidth: 240, alignment: .leading)
+        .frame(width: 40, height: 34)
         .opacity(isMinimized ? 0.48 : 1)
         .background(backgroundStyle, in: RoundedRectangle(cornerRadius: 7))
         .overlay(alignment: .topTrailing) {
