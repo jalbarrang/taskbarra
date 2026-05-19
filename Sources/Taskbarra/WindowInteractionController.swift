@@ -25,7 +25,7 @@ final class WindowInteractionController {
         }
 
         restoreIfNeeded(axWindow)
-        activateApplication(ownerPID: window.ownerPID)
+        activateApplicationForSingleWindow(ownerPID: window.ownerPID)
         raise(axWindow)
         refreshWindows()
     }
@@ -35,7 +35,7 @@ final class WindowInteractionController {
 
         if resolver.isMinimized(axWindow) {
             restoreIfNeeded(axWindow)
-            activateApplication(ownerPID: window.ownerPID)
+            activateApplicationForSingleWindow(ownerPID: window.ownerPID)
             raise(axWindow)
         } else {
             minimize(axWindow)
@@ -52,7 +52,7 @@ final class WindowInteractionController {
     func activate(window: WindowInfo) {
         guard let axWindow = resolver.findWindow(matching: window, includeMinimized: true) else { return }
         restoreIfNeeded(axWindow)
-        activateApplication(ownerPID: window.ownerPID)
+        activateApplicationForSingleWindow(ownerPID: window.ownerPID)
         raise(axWindow)
         refreshWindows()
     }
@@ -129,6 +129,10 @@ final class WindowInteractionController {
 
     private func activateApplication(ownerPID: pid_t) {
         NSRunningApplication(processIdentifier: ownerPID)?.activate(options: [.activateAllWindows])
+    }
+
+    private func activateApplicationForSingleWindow(ownerPID: pid_t) {
+        NSRunningApplication(processIdentifier: ownerPID)?.activate()
     }
 
     private func copyToPasteboard(_ value: String) {
