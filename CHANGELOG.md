@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/jalbarrang/taskbarra/compare/v0.2.0...v0.2.1) (2026-05-19)
+
+
+### Bug Fixes
+
+* clicking one window should only bring that window ([987264d](https://github.com/jalbarrang/taskbarra/commit/987264df3dd162831a072e38d8c21d8a96fd44e5))
+
 ## [0.2.0](https://github.com/jalbarrang/taskbarra/compare/v0.1.0...v0.2.0) (2026-05-18)
 
 
