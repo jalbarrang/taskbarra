@@ -26,7 +26,7 @@ macOS agrupa todas las ventanas de una app bajo un solo icono en el Dock. No hay
 | **Apps ancladas** | No — solo ventanas abiertas |
 | **Tema** | Siempre oscuro (dark mode forzado en la ventana) |
 | **UI framework** | SwiftUI para contenido + AppKit para la ventana (`NSHostingView`) |
-| **Distribución** | DMG directo + Sparkle auto-update + Homebrew cask |
+| **Distribución** | DMG con firma ad hoc + cask en `jalbarrang/homebrew-tap`; notarización y Sparkle quedan diferidos mientras no se use una cuenta Apple Developer |
 | **macOS mínimo** | 14 (Sonoma) |
 
 ## Stack
@@ -35,5 +35,5 @@ macOS agrupa todas las ventanas de una app bajo un solo icono en el Dock. No hay
 - **UI**: SwiftUI (contenido) + AppKit (ventana/sistema)
 - **APIs de sistema**: Accessibility API (`AXUIElement`, `AXObserver`), Core Graphics (`CGWindowListCopyWindowInfo`)
 - **Permisos requeridos**: Accessibility (System Preferences > Privacy & Security)
-- **Auto-update**: Sparkle framework
+- **Auto-update**: No integrado; las actualizaciones son manuales mediante Homebrew o DMG
 - **Build**: Xcode / xcodegen

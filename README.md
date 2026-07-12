@@ -15,11 +15,44 @@ See [`CONTEXT.md`](./CONTEXT.md) for product and architecture decisions.
 
 This repo intentionally starts without an Xcode project. The current scaffold builds with Swift Package Manager and packages a local `.app` bundle via script.
 
+## Installation
+
+### Homebrew
+
+```bash
+brew install --cask jalbarrang/tap/taskbarra
+xattr -dr com.apple.quarantine /Applications/Taskbarra.app
+```
+
+The release is ad-hoc signed rather than Developer ID signed or notarized. Homebrew 6 no longer supports `--no-quarantine`, so clear the quarantine attribute explicitly before the first launch.
+
+### Manual DMG
+
+Download the latest `Taskbarra-X.Y.Z.dmg` from [GitHub Releases](https://github.com/jalbarrang/taskbarra/releases), open it, and drag Taskbarra into Applications. Then run:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Taskbarra.app
+```
+
+On first launch, grant Taskbarra access in System Settings > Privacy & Security > Accessibility. Full Disk Access is optional and only needed for Notification Center badges and previews.
+
+## Updating
+
+For a Homebrew installation:
+
+```bash
+brew update
+brew upgrade --cask taskbarra
+xattr -dr com.apple.quarantine /Applications/Taskbarra.app
+```
+
+Every ad-hoc-signed release has a new signing identity from macOS's perspective. After an update, open System Settings > Privacy & Security > Accessibility, remove any stale Taskbarra entry, add `/Applications/Taskbarra.app` again, and relaunch the app.
+
 ## Releases and versioning
 
 Taskbarra uses [Release Please](https://github.com/googleapis/release-please) with Conventional Commits to maintain semantic versioning and `CHANGELOG.md`. Pushes to `main` update or create a release PR; merging that PR creates the GitHub Release/tag.
 
-When a GitHub Release is published, the release build workflow creates a macOS `.app` archive. These personal builds use free ad-hoc signing (`codesign --sign -`) only so macOS can attach entitlements; they are **not** Developer ID signed or notarized. Expect Gatekeeper/TCC prompts, and keep treating the app as personal experimental software.
+When a GitHub Release is published, the release build workflow creates a versioned macOS DMG and updates the Taskbarra cask in [`jalbarrang/homebrew-tap`](https://github.com/jalbarrang/homebrew-tap). These personal builds use free ad-hoc signing (`codesign --sign -`) only so macOS can attach entitlements; they are **not** Developer ID signed or notarized. Expect Gatekeeper/TCC prompts, and keep treating the app as personal experimental software.
 
 ## Quality checks
 

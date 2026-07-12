@@ -22,6 +22,13 @@ mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$BUILD_DIR/$APP_NAME" "$MACOS_DIR/$APP_NAME"
 cp "$ROOT_DIR/Resources/Info.plist" "$CONTENTS_DIR/Info.plist"
 
+if [[ -n "${VERSION:-}" ]]; then
+  /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$CONTENTS_DIR/Info.plist"
+fi
+if [[ -n "${BUILD_NUMBER:-}" ]]; then
+  /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$CONTENTS_DIR/Info.plist"
+fi
+
 # Ad-hoc signing is convenient but macOS Accessibility/TCC may treat rebuilt binaries as
 # new apps. Set TASKBARRA_CODESIGN_IDENTITY to a stable local Developer ID/Apple
 # Development certificate when repeatedly testing Accessibility permissions.
@@ -31,4 +38,5 @@ codesign --force --sign "$CODESIGN_IDENTITY" \
   "$APP_DIR" >/dev/null
 
 echo "Built $APP_DIR"
+echo "Version: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$CONTENTS_DIR/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$CONTENTS_DIR/Info.plist"))"
 echo "Signed with identity: $CODESIGN_IDENTITY"

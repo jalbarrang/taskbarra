@@ -1,9 +1,16 @@
+# TAP_GITHUB_TOKEN must be a fine-grained PAT for jalbarrang/homebrew-tap with Contents read/write.
 name: Release Build
 
 on:
-  release:
-    types:
-      - published
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag in vX.Y.Z format
+        required: true
+        type: string
+    secrets:
+      TAP_GITHUB_TOKEN:
+        required: true
 
 permissions:
   contents: write
@@ -11,21 +18,102 @@ permissions:
 jobs:
   macos-app:
     runs-on: macos-14
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      dmg_sha256: ${{ steps.checksum.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.2.app || true
 
-      - name: Build app bundle with ad-hoc signing
-        run: CONFIGURATION=release TASKBARRA_CODESIGN_IDENTITY=- ./Scripts/build-app.sh
-
-      - name: Archive app bundle
+      - name: Resolve release version
+        id: release
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
-          mkdir -p .build/release-artifacts
-          ditto -c -k --keepParent .build/Taskbarra.app .build/release-artifacts/Taskbarra-${{ github.event.release.tag_name }}-macos-ad-hoc.zip
+          VERSION="${TAG#v}"
+          if [[ "$VERSION" == "$TAG" || ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected release tag vX.Y.Z, got: $TAG" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build app bundle with ad-hoc signing
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          CONFIGURATION: release
+          TASKBARRA_CODESIGN_IDENTITY: "-"
+        run: ./Scripts/build-app.sh
+
+      - name: Package DMG
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: ./Scripts/package-dmg.sh
+
+      - name: Compute DMG checksum
+        id: checksum
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: echo "sha256=$(shasum -a 256 ".build/Taskbarra-$VERSION.dmg" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
 
       - name: Upload release artifact
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" .build/release-artifacts/*.zip --clobber
+          TAG: ${{ inputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: gh release upload "$TAG" ".build/Taskbarra-$VERSION.dmg" --clobber
+
+  bump-cask:
+    needs: macos-app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate tap token
+        env:
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [[ -z "$TAP_GITHUB_TOKEN" ]]; then
+            echo "TAP_GITHUB_TOKEN is required: fine-grained PAT for jalbarrang/homebrew-tap with Contents read/write." >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          repository: jalbarrang/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update Taskbarra cask
+        env:
+          VERSION: ${{ needs.macos-app.outputs.version }}
+          SHA256: ${{ needs.macos-app.outputs.dmg_sha256 }}
+        run: |
+          python3 <<'PY'
+          import os
+          import pathlib
+          import re
+
+          path = pathlib.Path("homebrew-tap/Casks/taskbarra.rb")
+          contents = path.read_text()
+          contents, version_count = re.subn(r'^  version ".*"$', f'  version "{os.environ["VERSION"]}"', contents, flags=re.MULTILINE)
+          contents, sha_count = re.subn(r'^  sha256 (?:".*"|:no_check)$', f'  sha256 "{os.environ["SHA256"]}"', contents, flags=re.MULTILINE)
+          if version_count != 1 or sha_count != 1:
+              raise SystemExit(f"Expected one version and sha256 field, found {version_count} and {sha_count}")
+          path.write_text(contents)
+          PY
+
+      - name: Commit cask update
+        env:
+          VERSION: ${{ needs.macos-app.outputs.version }}
+        run: |
+          cd homebrew-tap
+          if git diff --quiet; then
+            echo "Taskbarra cask is already at $VERSION."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/taskbarra.rb
+          git commit -m "taskbarra $VERSION"
+          git push origin main
