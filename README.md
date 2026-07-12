@@ -116,11 +116,15 @@ For Accessibility testing, install and launch the app from a stable path:
 open /Applications/Taskbarra.app
 ```
 
-macOS Accessibility/TCC permissions are tied to the app's code-signing identity and launch path. The default local build uses ad-hoc signing (`-`), which is convenient but can require re-approval after rebuilds. For repeated Accessibility testing, sign with a stable local certificate:
+macOS Accessibility/TCC permissions are tied to the app's code-signing identity and launch path. To preserve permissions across local rebuilds, create and trust Taskbarra's stable self-signed development identity once, then install from the stable application path:
 
 ```bash
-TASKBARRA_CODESIGN_IDENTITY="Apple Development: Your Name (TEAMID)" ./Scripts/install-local-app.sh
+./Scripts/setup-local-codesign.sh
+./Scripts/install-local-app.sh
+open /Applications/Taskbarra.app
 ```
+
+Local builds automatically use the `Taskbarra Local` identity when it is available and otherwise fall back to ad-hoc signing (`-`). Set `TASKBARRA_CODESIGN_IDENTITY` to override either choice with another code-signing identity.
 
 The scaffold shows a dark, always-visible bottom bar on the main display. Window detection, Accessibility onboarding, real work-area reservation, and window actions are tracked as Beads issues.
 
