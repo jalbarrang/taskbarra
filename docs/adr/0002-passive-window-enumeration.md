@@ -14,7 +14,7 @@ Taskbarra needs to discover and display windows without surprising the user by c
 
 ## Current scan path audit
 
-Normal monitoring starts in `TaskbarWindowController.convenience init()`:
+Normal monitoring starts in `MultiMonitorTaskbarCoordinator.start()`:
 
 1. `WindowStore.startMonitoring()`
 2. `WindowStore.refreshPassiveSnapshot()`
@@ -66,9 +66,9 @@ AX mutation is also confined here for close/minimize/restore, except for work-ar
 
 ## Known non-passive coordinator
 
-`AXWindowWorkAreaCoordinator.reconcile(windows:)` is not discovery. It finds matching AX windows and can set `kAXPositionAttribute` / `kAXSizeAttribute` to reserve Taskbarra's work area for maximized windows. `TaskbarWindowController` wires this through `WindowStore.onPassiveSnapshotDidChange` and names the bridge `reconcileWorkAreaAfterPassiveDiscovery(windows:)` so the mutating layout phase is explicit and separate from passive scanning.
+`AXWindowWorkAreaCoordinator.reconcile(windows:)` is not discovery. It finds matching AX windows and can set `kAXPositionAttribute` / `kAXSizeAttribute` to reserve Taskbarra's work area for maximized windows. `MultiMonitorTaskbarCoordinator` invokes this layout phase from `WindowStore.onPassiveSnapshotDidChange`, keeping mutation explicit and separate from passive scanning.
 
-This is an intentional layout-management side effect, but it must remain separate from window discovery contracts. `WindowStore` owns passive snapshots; `TaskbarWindowController` owns the decision to run layout reconciliation after a snapshot changes.
+This is an intentional layout-management side effect, but it must remain separate from window discovery contracts. `WindowStore` owns passive snapshots; `MultiMonitorTaskbarCoordinator` owns the decision to run layout reconciliation after a snapshot changes.
 
 ## Decision
 

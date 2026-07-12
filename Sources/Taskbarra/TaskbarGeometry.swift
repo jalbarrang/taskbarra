@@ -24,11 +24,17 @@ struct TaskbarGeometry {
         )
     }
 
+    static func forScreen(_ screen: NSScreen, barHeight: CGFloat = Self.defaultHeight) -> TaskbarGeometry {
+        TaskbarGeometry(screenFrame: screen.frame, barHeight: barHeight)
+    }
+
     static func forMainScreen(barHeight: CGFloat = Self.defaultHeight) -> TaskbarGeometry {
-        TaskbarGeometry(
-            screenFrame: (NSScreen.main ?? NSScreen.screens.first)?.frame
-                ?? NSRect(x: 0, y: 0, width: 800, height: 600),
-            barHeight: barHeight
-        )
+        guard let screen = NSScreen.main ?? NSScreen.screens.first else {
+            return TaskbarGeometry(
+                screenFrame: NSRect(x: 0, y: 0, width: 800, height: 600),
+                barHeight: barHeight
+            )
+        }
+        return forScreen(screen, barHeight: barHeight)
     }
 }

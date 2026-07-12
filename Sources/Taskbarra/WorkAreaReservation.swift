@@ -1,40 +1,40 @@
 import AppKit
+import CoreGraphics
+import TaskbarraCore
 
-/// Tracks the intended usable desktop area above Taskbarra.
+/// Tracks Taskbarra's intended usable desktop area on every active display.
 ///
 /// macOS does not expose a public API that lets third-party apps mutate NSScreen.visibleFrame
 /// or register a Dock-like reserved work area. The Dock uses private WindowServer/CGS behavior.
-/// This type intentionally stays public-API-only: it computes the reserved geometry so later
-/// Accessibility-based window management can keep maximized windows out of the bar area.
+/// This type intentionally stays public-API-only: it computes per-display geometry so the
+/// Accessibility coordinator can keep maximized windows out of each display's taskbar area.
 @MainActor
 final class WorkAreaReservation {
-    private(set) var screenFrame: NSRect = .zero
-    private(set) var reservedTaskbarFrame: NSRect = .zero
-    private(set) var usableFrame: NSRect = .zero
+    private var workAreasByDisplayID: [CGDirectDisplayID: DisplayWorkArea] = [:]
 
-    /// Usable frame expressed in the Accessibility/CoreGraphics window coordinate space.
-    ///
-    /// Taskbarra's panel is positioned with AppKit coordinates (origin at the bottom-left of
-    /// the main display), but `CGWindowListCopyWindowInfo` and Accessibility window positions
-    /// use a top-left origin. Reserving a bottom bar therefore means reducing the height while
-    /// keeping the window's top y unchanged in AX/CG coordinates.
-    var usableFrameInWindowCoordinates: NSRect {
-        convertToWindowCoordinates(usableFrame)
+    var displayIDs: Set<CGDirectDisplayID> {
+        Set(workAreasByDisplayID.keys)
     }
 
-    func apply(geometry: TaskbarGeometry) {
-        screenFrame = geometry.screenFrame
-        reservedTaskbarFrame = geometry.taskbarFrame
-        usableFrame = geometry.usableFrameAboveTaskbar
+    var workAreas: [DisplayWorkArea] {
+        workAreasByDisplayID.values.sorted { $0.displayID < $1.displayID }
     }
 
-    private func convertToWindowCoordinates(_ frame: NSRect) -> NSRect {
-        guard !screenFrame.isEmpty, !frame.isEmpty else { return frame }
-        return NSRect(
-            x: frame.minX,
-            y: screenFrame.minY + (screenFrame.maxY - frame.maxY),
-            width: frame.width,
-            height: frame.height
+    func apply(geometry: TaskbarGeometry, for displayID: CGDirectDisplayID) {
+        let primaryScreenHeight = NSScreen.screens.first?.frame.height ?? geometry.screenFrame.height
+        let converter = ScreenCoordinateConverter(primaryScreenHeight: primaryScreenHeight)
+        workAreasByDisplayID[displayID] = DisplayWorkArea(
+            displayID: displayID,
+            screenFrame: converter.appKitToCG(geometry.screenFrame),
+            usableFrame: converter.appKitToCG(geometry.usableFrameAboveTaskbar)
         )
+    }
+
+    func removeReservation(for displayID: CGDirectDisplayID) {
+        workAreasByDisplayID.removeValue(forKey: displayID)
+    }
+
+    func removeAll() {
+        workAreasByDisplayID.removeAll()
     }
 }

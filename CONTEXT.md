@@ -22,7 +22,7 @@ macOS agrupa todas las ventanas de una app bajo un solo icono en el Dock. No hay
 | **Clic derecho** | Menú contextual (minimizar, cerrar, mover, etc.) |
 | **Indicadores visuales** | Línea inferior de color (activa vs inactiva) + opacidad reducida para ventanas minimizadas |
 | **Spaces** | Solo ventanas del Space activo |
-| **Monitores** | Una sola barra en el monitor principal |
+| **Monitores** | Una barra por monitor, con solo las ventanas de esa pantalla; las pantallas espejadas no crean barras duplicadas |
 | **Apps ancladas** | No — solo ventanas abiertas |
 | **Tema** | Siempre oscuro (dark mode forzado en la ventana) |
 | **UI framework** | SwiftUI para contenido + AppKit para la ventana (`NSHostingView`) |

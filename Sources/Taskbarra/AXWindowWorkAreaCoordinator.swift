@@ -6,6 +6,7 @@ final class AXWindowWorkAreaCoordinator {
     private let workAreaReservation: WorkAreaReservation
     private let policy: WindowFramePolicy
     private let resolver: AXWindowResolver
+    private let windowWorkAreaResolver: WindowWorkAreaResolver
     private var lastAppliedFramesByWindowID: [WindowInfo.ID: CGRect] = [:]
 
     init(
@@ -15,17 +16,18 @@ final class AXWindowWorkAreaCoordinator {
         self.workAreaReservation = workAreaReservation
         self.policy = policy
         self.resolver = AXWindowResolver(framePolicy: policy)
+        self.windowWorkAreaResolver = WindowWorkAreaResolver()
     }
 
     func reconcile(windows: [WindowInfo]) {
-        let screenFrame = workAreaReservation.screenFrame
-        let usableFrame = workAreaReservation.usableFrameInWindowCoordinates
-        guard !screenFrame.isEmpty, !usableFrame.isEmpty else { return }
+        let workAreas = workAreaReservation.workAreas
+        guard !workAreas.isEmpty else { return }
 
         let liveIDs = Set(windows.map(\.id))
         lastAppliedFramesByWindowID = lastAppliedFramesByWindowID.filter { liveIDs.contains($0.key) }
 
         for window in windows {
+            guard let workArea = windowWorkAreaResolver.workArea(for: window, among: workAreas) else { continue }
             guard let axWindow = resolver.findWindow(matching: window) else { continue }
             guard !resolver.isTrueFullscreen(axWindow), canSetFrame(axWindow) else { continue }
 
@@ -33,16 +35,16 @@ final class AXWindowWorkAreaCoordinator {
             guard
                 policy.shouldMoveMaximizedWindow(
                     windowFrame: frame,
-                    screenFrame: screenFrame,
-                    usableFrame: usableFrame,
+                    screenFrame: workArea.screenFrame,
+                    usableFrame: workArea.usableFrame,
                     lastAppliedFrame: lastAppliedFramesByWindowID[window.id]
                 )
             else {
                 continue
             }
 
-            if setFrame(usableFrame, for: axWindow) {
-                lastAppliedFramesByWindowID[window.id] = usableFrame
+            if setFrame(workArea.usableFrame, for: axWindow) {
+                lastAppliedFramesByWindowID[window.id] = workArea.usableFrame
             }
         }
     }

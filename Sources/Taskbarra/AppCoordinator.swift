@@ -5,7 +5,7 @@ import Foundation
 final class AppCoordinator {
     private let accessibilityPermission: AccessibilityPermission
     private let fullDiskAccessPermission: FullDiskAccessPermission
-    private var taskbarWindowController: TaskbarWindowController?
+    private var taskbarCoordinator: MultiMonitorTaskbarCoordinator?
     private var onboardingWindowController: PermissionsOnboardingWindowController?
     private var statusItemController: StatusItemController?
     private var permissionMonitorTask: Task<Void, Never>?
@@ -31,6 +31,8 @@ final class AppCoordinator {
     func stop() {
         permissionMonitorTask?.cancel()
         permissionMonitorTask = nil
+        taskbarCoordinator?.stop()
+        taskbarCoordinator = nil
         statusItemController?.stop()
         statusItemController = nil
     }
@@ -69,15 +71,15 @@ final class AppCoordinator {
         onboardingWindowController?.close()
         onboardingWindowController = nil
 
-        if taskbarWindowController == nil {
-            taskbarWindowController = TaskbarWindowController()
+        if taskbarCoordinator == nil {
+            taskbarCoordinator = MultiMonitorTaskbarCoordinator()
         }
-        taskbarWindowController?.showWindow(nil)
+        taskbarCoordinator?.start()
     }
 
     private func showOnboarding() {
-        taskbarWindowController?.close()
-        taskbarWindowController = nil
+        taskbarCoordinator?.stop()
+        taskbarCoordinator = nil
 
         if onboardingWindowController == nil {
             onboardingWindowController = PermissionsOnboardingWindowController(

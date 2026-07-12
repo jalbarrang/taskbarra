@@ -1,9 +1,12 @@
 import AppKit
+import CoreGraphics
 import SwiftUI
 import TaskbarraCore
 
 struct TaskbarView: View {
+    let displayID: CGDirectDisplayID
     let windowStore: WindowStore
+    let windowDisplayStore: WindowDisplayStore
     let notificationStore: NotificationStore
     let interactionController: WindowInteractionController
 
@@ -12,14 +15,14 @@ struct TaskbarView: View {
     var body: some View {
         HStack(spacing: 8) {
             Group {
-                if windowStore.windows.isEmpty {
+                if displayedWindows.isEmpty {
                     Text(L10n.text("taskbar.empty"))
                         .font(.system(size: 12))
                         .foregroundStyle(.white.opacity(0.68))
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 6) {
-                            ForEach(windowStore.windows) { window in
+                            ForEach(displayedWindows) { window in
                                 WindowSnapshotButton(
                                     window: window,
                                     appIcon: windowStore.appIconsByWindowID[window.id],
@@ -136,8 +139,12 @@ struct TaskbarView: View {
         )
     }
 
+    private var displayedWindows: [WindowInfo] {
+        windowDisplayStore.windows(for: displayID, from: windowStore.windows)
+    }
+
     private func windows(forSameApplicationAs window: WindowInfo) -> [WindowInfo] {
-        windowStore.windows.filter { $0.ownerPID == window.ownerPID }
+        displayedWindows.filter { $0.ownerPID == window.ownerPID }
     }
 
     private func notificationMenuTitle(_ notification: AppNotification) -> String {
