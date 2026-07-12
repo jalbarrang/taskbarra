@@ -1,0 +1,2 @@
+# Gitignored files are hidden from Cursor by default; re-include the taskman plan ledger.
+!.plans/
