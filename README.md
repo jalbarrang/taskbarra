@@ -182,10 +182,6 @@ Sources/Taskbarra/Resources/en.lproj/Localizable.strings
 
 Use `L10n.text("string.key")` from `Sources/Taskbarra/Localization.swift` for visible app text instead of hardcoded literals. To add a translation, create another locale folder next to `en.lproj` (for example `es.lproj`) with a `Localizable.strings` file containing the same keys translated for that language.
 
-## Issues
+## Plan tracking
 
-```bash
-bd ready
-bd show <id>
-bd update <id> --claim
-```
+Work is planned and tracked with the `taskman` CLI; the plan ledger lives in `.plans/`.
