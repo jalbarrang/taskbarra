@@ -23,14 +23,11 @@
 "taskbar.context.section.notifications" = "Notifications";
 "taskbar.context.section.window" = "Window";
 "taskbar.context.section.app" = "App";
-"taskbar.context.show_all_windows" = "Show All Windows";
 "taskbar.context.hide" = "Hide";
 "taskbar.context.quit" = "Quit";
 "taskbar.context.force_quit" = "Force Quit";
 "taskbar.context.relaunch" = "Relaunch";
 "taskbar.context.open_in_finder" = "Open in Finder";
-"taskbar.context.copy_bundle_id" = "Copy Bundle ID";
-"taskbar.context.copy_pid" = "Copy PID";
 "window.state.active" = "active";
 "window.state.minimized" = "minimized";
 "status.about" = "About Taskbarra";

@@ -10,8 +10,6 @@ struct TaskbarView: View {
     let notificationStore: NotificationStore
     let interactionController: WindowInteractionController
 
-    private let deepLinkPolicy = NotificationDeepLinkPolicy()
-
     var body: some View {
         HStack(spacing: 8) {
             Group {
@@ -37,43 +35,6 @@ struct TaskbarView: View {
                                     )
                                 }
                                 .contextMenu {
-                                    Section(L10n.text("taskbar.context.section.windows")) {
-                                        ForEach(windows(forSameApplicationAs: window)) { appWindow in
-                                            Button {
-                                                notificationStore.markSeen(ownerPID: appWindow.ownerPID)
-                                                interactionController.activate(window: appWindow)
-                                            } label: {
-                                                if appWindow.id == windowStore.activeWindowID {
-                                                    Label(appWindow.displayTitle, systemImage: "checkmark")
-                                                } else if windowStore.minimizedWindowIDs.contains(appWindow.id) {
-                                                    Label(appWindow.displayTitle, systemImage: "minus.square")
-                                                } else {
-                                                    Text(appWindow.displayTitle)
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    let notifications = notificationStore.notifications(forOwnerPID: window.ownerPID)
-                                    if !notifications.isEmpty {
-                                        Section(L10n.text("taskbar.context.section.notifications")) {
-                                            ForEach(notifications) { notification in
-                                                if let deepLink = notification.deepLink {
-                                                    Button(notificationMenuTitle(notification, deepLink: deepLink)) {
-                                                        openNotificationDeepLink(deepLink)
-                                                    }
-                                                    .disabled(deepLinkPolicy.decision(for: deepLink) == .block)
-                                                } else {
-                                                    Button(notificationMenuTitle(notification)) {}
-                                                        .disabled(true)
-                                                }
-                                            }
-                                            Button(L10n.text("taskbar.context.mark_notifications_seen")) {
-                                                notificationStore.markSeen(ownerPID: window.ownerPID)
-                                            }
-                                        }
-                                    }
-
                                     Section(L10n.text("taskbar.context.section.window")) {
                                         Button(L10n.text("taskbar.context.close_window")) {
                                             interactionController.close(window: window)
@@ -81,10 +42,6 @@ struct TaskbarView: View {
                                     }
 
                                     Section(L10n.text("taskbar.context.section.app")) {
-                                        Button(L10n.text("taskbar.context.show_all_windows")) {
-                                            notificationStore.markSeen(ownerPID: window.ownerPID)
-                                            interactionController.showAllWindows(forOwnerPID: window.ownerPID)
-                                        }
                                         Button(L10n.text("taskbar.context.hide")) {
                                             interactionController.hideApplication(ownerPID: window.ownerPID)
                                         }
@@ -104,17 +61,6 @@ struct TaskbarView: View {
                                         .disabled(
                                             !interactionController.supportsOpenInFinder(ownerPID: window.ownerPID)
                                         )
-                                        Button(L10n.text("taskbar.context.copy_bundle_id")) {
-                                            interactionController.copyBundleIdentifier(ownerPID: window.ownerPID)
-                                        }
-                                        .disabled(
-                                            !interactionController.supportsCopyBundleIdentifier(
-                                                ownerPID: window.ownerPID
-                                            )
-                                        )
-                                        Button(L10n.text("taskbar.context.copy_pid")) {
-                                            interactionController.copyProcessIdentifier(ownerPID: window.ownerPID)
-                                        }
                                     }
                                 }
                             }
@@ -143,75 +89,4 @@ struct TaskbarView: View {
         windowDisplayStore.windows(for: displayID, from: windowStore.windows)
     }
 
-    private func windows(forSameApplicationAs window: WindowInfo) -> [WindowInfo] {
-        displayedWindows.filter { $0.ownerPID == window.ownerPID }
-    }
-
-    private func notificationMenuTitle(_ notification: AppNotification) -> String {
-        let title = NotificationPrivacyFilter.displayTitle(
-            for: notification,
-            configuration: notificationStore.privacyConfiguration
-        ) ?? L10n.text("taskbar.context.notification_hidden")
-        guard
-            let body = NotificationPrivacyFilter.displayBody(
-                for: notification,
-                configuration: notificationStore.privacyConfiguration
-            ),
-            !body.isEmpty
-        else { return title }
-        return "\(title) — \(body)"
-    }
-
-    private func notificationMenuTitle(_ notification: AppNotification, deepLink: URL) -> String {
-        let scheme = deepLinkPolicy.schemeDescription(for: deepLink)
-        let destination = deepLink.absoluteString
-        return String(
-            format: L10n.text("taskbar.context.notification_open_destination"),
-            notificationMenuTitle(notification),
-            scheme,
-            destination
-        )
-    }
-
-    private func openNotificationDeepLink(_ deepLink: URL) {
-        switch deepLinkPolicy.decision(for: deepLink) {
-        case .allow:
-            NSWorkspace.shared.open(deepLink)
-        case .confirm:
-            if confirmOpeningNotificationDeepLink(deepLink) {
-                NSWorkspace.shared.open(deepLink)
-            }
-        case .block:
-            showBlockedNotificationDeepLinkAlert(deepLink)
-        }
-    }
-
-    private func confirmOpeningNotificationDeepLink(_ deepLink: URL) -> Bool {
-        let scheme = deepLinkPolicy.schemeDescription(for: deepLink)
-        let alert = NSAlert()
-        alert.messageText = L10n.text("notification.deep_link.confirm.title")
-        alert.informativeText = String(
-            format: L10n.text("notification.deep_link.confirm.message"),
-            scheme,
-            deepLink.absoluteString
-        )
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: L10n.text("notification.deep_link.confirm.open"))
-        alert.addButton(withTitle: L10n.text("notification.deep_link.confirm.cancel"))
-        return alert.runModal() == .alertFirstButtonReturn
-    }
-
-    private func showBlockedNotificationDeepLinkAlert(_ deepLink: URL) {
-        let scheme = deepLinkPolicy.schemeDescription(for: deepLink)
-        let alert = NSAlert()
-        alert.messageText = L10n.text("notification.deep_link.blocked.title")
-        alert.informativeText = String(
-            format: L10n.text("notification.deep_link.blocked.message"),
-            scheme,
-            deepLink.absoluteString
-        )
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: L10n.text("common.ok"))
-        alert.runModal()
-    }
 }

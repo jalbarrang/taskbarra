@@ -57,12 +57,6 @@ final class WindowInteractionController {
         refreshWindows()
     }
 
-    func showAllWindows(forOwnerPID ownerPID: pid_t) {
-        NSRunningApplication(processIdentifier: ownerPID)?.unhide()
-        activateApplication(ownerPID: ownerPID)
-        refreshWindows()
-    }
-
     func hideApplication(ownerPID: pid_t) {
         NSRunningApplication(processIdentifier: ownerPID)?.hide()
         refreshWindows()
@@ -91,15 +85,6 @@ final class WindowInteractionController {
         NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
     }
 
-    func copyBundleIdentifier(ownerPID: pid_t) {
-        guard let bundleIdentifier = NSRunningApplication(processIdentifier: ownerPID)?.bundleIdentifier else { return }
-        copyToPasteboard(bundleIdentifier)
-    }
-
-    func copyProcessIdentifier(ownerPID: pid_t) {
-        copyToPasteboard(String(ownerPID))
-    }
-
     func supportsRelaunch(ownerPID: pid_t) -> Bool {
         guard let application = NSRunningApplication(processIdentifier: ownerPID) else { return false }
         return application.bundleURL != nil || application.executableURL != nil
@@ -107,10 +92,6 @@ final class WindowInteractionController {
 
     func supportsOpenInFinder(ownerPID: pid_t) -> Bool {
         NSRunningApplication(processIdentifier: ownerPID)?.bundleURL != nil
-    }
-
-    func supportsCopyBundleIdentifier(ownerPID: pid_t) -> Bool {
-        NSRunningApplication(processIdentifier: ownerPID)?.bundleIdentifier != nil
     }
 
     private func minimize(_ window: AXUIElement) {
@@ -127,17 +108,8 @@ final class WindowInteractionController {
         AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, value)
     }
 
-    private func activateApplication(ownerPID: pid_t) {
-        NSRunningApplication(processIdentifier: ownerPID)?.activate(options: [.activateAllWindows])
-    }
-
     private func activateApplicationForSingleWindow(ownerPID: pid_t) {
         NSRunningApplication(processIdentifier: ownerPID)?.activate()
-    }
-
-    private func copyToPasteboard(_ value: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(value, forType: .string)
     }
 
     private func raise(_ window: AXUIElement) {
