@@ -2,6 +2,13 @@ import ApplicationServices
 import CoreGraphics
 import TaskbarraCore
 
+// Private HIServices symbol mapping an AX element to its CoreGraphics window id.
+// It is a read-only accessor (no window mutation) and the only reliable way to
+// tell two windows of the same app apart when title and frame collide, e.g. two
+// maximized windows or Electron apps whose AX title/frame don't match CGWindowList.
+@_silgen_name("_AXUIElementGetWindow")
+private func _AXUIElementGetWindow(_ element: AXUIElement, _ identifier: UnsafeMutablePointer<CGWindowID>) -> AXError
+
 @MainActor
 struct AXWindowResolver {
     private let framePolicy: WindowFramePolicy
@@ -13,6 +20,10 @@ struct AXWindowResolver {
     func findWindow(matching window: WindowInfo, includeMinimized: Bool = false) -> AXUIElement? {
         let app = AXUIElementCreateApplication(window.ownerPID)
         guard let axWindows = copyWindows(for: app) else { return nil }
+
+        if let exactMatch = exactWindow(matching: window, in: axWindows, includeMinimized: includeMinimized) {
+            return exactMatch
+        }
 
         return axWindows.first { axWindow in
             matches(window, axWindow: axWindow, includeMinimized: includeMinimized, requireTitle: true)
@@ -37,6 +48,15 @@ struct AXWindowResolver {
 
     func isMinimized(_ window: AXUIElement) -> Bool {
         boolAttribute(kAXMinimizedAttribute, of: window) ?? false
+    }
+
+    // Returns the CoreGraphics window id for an AX window element, or nil when the
+    // private accessor is unavailable or the element has no CG window (e.g. some
+    // minimized windows). Callers must fall back to heuristic matching on nil.
+    func windowID(of window: AXUIElement) -> CGWindowID? {
+        var identifier: CGWindowID = 0
+        guard _AXUIElementGetWindow(window, &identifier) == .success, identifier != 0 else { return nil }
+        return identifier
     }
 
     func isTrueFullscreen(_ window: AXUIElement) -> Bool {
@@ -96,6 +116,16 @@ struct AXWindowResolver {
         return settable.boolValue
     }
 
+    private func exactWindow(
+        matching window: WindowInfo,
+        in axWindows: [AXUIElement],
+        includeMinimized: Bool
+    ) -> AXUIElement? {
+        guard let match = axWindows.first(where: { windowID(of: $0) == window.id }) else { return nil }
+        guard includeMinimized || !isMinimized(match) else { return nil }
+        return match
+    }
+
     private func matches(
         _ window: WindowInfo,
         axWindow: AXUIElement,
@@ -124,8 +154,8 @@ struct AXWindowResolver {
     }
 }
 
-private extension Array {
-    func only(where predicate: (Element) -> Bool) -> Element? {
+extension Array {
+    fileprivate func only(where predicate: (Element) -> Bool) -> Element? {
         var result: Element?
         for element in self where predicate(element) {
             guard result == nil else { return nil }
