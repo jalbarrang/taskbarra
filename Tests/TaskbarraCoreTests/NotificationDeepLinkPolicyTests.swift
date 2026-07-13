@@ -1,5 +1,5 @@
-import XCTest
 @testable import TaskbarraCore
+import XCTest
 
 final class NotificationDeepLinkPolicyTests: XCTestCase {
     func testAllowsHttpAndHttpsByDefault() throws {

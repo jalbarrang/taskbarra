@@ -64,4 +64,3 @@ final class NotificationDeepLinkExtractorTests: XCTestCase {
         XCTAssertNil(NotificationDeepLinkExtractor.deepLink(in: ["payload": oversizedData]))
     }
 }
-

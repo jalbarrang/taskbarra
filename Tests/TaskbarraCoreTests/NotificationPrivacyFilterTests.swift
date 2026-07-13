@@ -38,8 +38,14 @@ final class NotificationPrivacyFilterTests: XCTestCase {
         let notification = makeNotification(bundleIdentifier: "com.example.app", deliveredAt: Date())
         let configuration = NotificationPrivacyConfiguration(showNotificationPreviews: true)
 
-        XCTAssertEqual(NotificationPrivacyFilter.displayTitle(for: notification, configuration: configuration), "Secret title")
-        XCTAssertEqual(NotificationPrivacyFilter.displayBody(for: notification, configuration: configuration), "Secret body")
+        XCTAssertEqual(
+            NotificationPrivacyFilter.displayTitle(for: notification, configuration: configuration),
+            "Secret title"
+        )
+        XCTAssertEqual(
+            NotificationPrivacyFilter.displayBody(for: notification, configuration: configuration),
+            "Secret body"
+        )
     }
 
     private func makeNotification(bundleIdentifier: String, deliveredAt: Date?) -> AppNotification {
