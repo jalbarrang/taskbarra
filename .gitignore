@@ -20,3 +20,4 @@ DerivedData/
 
 # taskman plan ledger (local-only; re-included for Cursor via .cursorignore)
 .plans/
+.taskman/
